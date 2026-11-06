@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.relay/
+.relay-evaluation/
+.relay-release-fixtures/
+.relay-release/
+.env*
+*.sqlite*
+*.log
+artifacts/local/
+.DS_Store
+*.pem
+*.key
