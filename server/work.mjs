@@ -2,6 +2,7 @@ import { active, id, timestamp } from './store.mjs';
 import { normalizeWorkspace, redact } from './security.mjs';
 
 const PERMISSIONS = new Set(['read-only', 'workspace-write']);
+const PROVIDERS = new Set(['codex', 'hermes']);
 const STATUSES = new Set(['planned', 'active', 'blocked', 'needs_review', 'paused', 'completed', 'cancelled']);
 const MODEL_STATUSES = new Set(['planned', 'active', 'blocked', 'needs_review']);
 
@@ -62,16 +63,19 @@ export class WorkBoard {
   }
 
   async registerProject(input) {
-    inputObject(input, ['name', 'workspace', 'permissionMode']);
+    inputObject(input, ['name', 'workspace', 'permissionMode', 'provider']);
     const name = text(input.name, 'Project name', 100);
     const permissionMode = permission(input.permissionMode === undefined ? 'read-only' : input.permissionMode);
+    const provider = input.provider ?? 'codex';
+    if (!PROVIDERS.has(provider)) fail('Choose Codex or Hermes.');
+    if (provider === 'hermes' && permissionMode !== 'read-only') fail('Hermes supports read-only project analysis.');
     const workspace = await normalizeWorkspace(input.workspace);
     // Check after the asynchronous directory validation so concurrent registrations converge.
     const existing = this.store.state.projects.find(project => project.workspace === workspace);
     if (existing) return existing;
     if (this.store.state.projects.some(project => sameName(project.name, name))) fail('A different project already uses that name.', 409);
     const now = timestamp();
-    const project = { id: id(), name, workspace, permissionMode, threadId: null, createdAt: now, updatedAt: now };
+    const project = { id: id(), name, workspace, permissionMode, provider, threadId: null, createdAt: now, updatedAt: now };
     this.store.change(state => {
       state.projects.push(project);
       this.store.event('project', 'Project registered', name, { projectId: project.id });
@@ -80,11 +84,16 @@ export class WorkBoard {
   }
 
   updateProject(projectId, input) {
-    inputObject(input, ['name', 'permissionMode']);
+    inputObject(input, ['name', 'permissionMode', 'provider']);
     const project = this.project(projectId);
     const patch = {};
     if ('name' in input) patch.name = text(input.name, 'Project name', 100);
     if ('permissionMode' in input) patch.permissionMode = permission(input.permissionMode);
+    if ('provider' in input) {
+      if (!PROVIDERS.has(input.provider)) fail('Choose Codex or Hermes.');
+      patch.provider = input.provider;
+    }
+    if ((patch.provider ?? project.provider) === 'hermes' && (patch.permissionMode ?? project.permissionMode) !== 'read-only') fail('Hermes supports read-only project analysis.');
     if (patch.name && this.store.state.projects.some(item => item.id !== projectId && sameName(item.name, patch.name))) {
       fail('A different project already uses that name.', 409);
     }
@@ -95,6 +104,8 @@ export class WorkBoard {
     }
     if (!Object.keys(patch).length) return project;
     this.store.change(() => {
+      // Keep earlier runs inspectable, but never resume a session through another provider.
+      if (patch.provider && patch.provider !== (project.provider || 'codex')) { project.threadId = null; delete project.handoff; }
       Object.assign(project, patch, { updatedAt: timestamp() });
       this.store.event('project', 'Project settings updated', project.name, { projectId });
     });
@@ -125,6 +136,7 @@ export class WorkBoard {
   setPlan(workId, input, { actor = 'user' } = {}) {
     inputObject(input, ['steps']);
     const work = this.get(workId);
+    if (this.project(work.projectId).provider === 'hermes') fail('Hermes supports individual read-only runs; reviewed automatic plans require Codex.');
     if (['completed', 'cancelled'].includes(work.status)) fail('Reopen this work before drafting a plan.', 409);
     if (actor !== 'user' && work.status === 'paused') fail('The user must resume paused work before its plan can change.', 403);
     if (linkedActiveTasks(this.store.state, workId).length) fail('Finish or cancel unfinished linked runs before changing the plan.', 409);
@@ -154,6 +166,7 @@ export class WorkBoard {
   approvePlan(workId, input) {
     inputObject(input, ['planId', 'reviewed', 'autoContinue']);
     const work = this.get(workId);
+    if (this.project(work.projectId).provider === 'hermes') fail('Hermes supports individual read-only runs; this saved plan requires Codex.');
     const plan = work.plan;
     if (!plan || typeof input.planId !== 'string' || input.planId !== plan.id) fail('Review the current exact plan before starting it.', 409);
     if (input.reviewed !== true || typeof input.autoContinue !== 'boolean') fail('Plan approval requires explicit review and a boolean auto-continue choice.');

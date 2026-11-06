@@ -4,35 +4,37 @@ import path from 'node:path';
 
 const REDACTED = '[REDACTED]';
 const SECRET_KEY = /(?:api_?key|access_?token|refresh_?token|id_?token|auth_?token|authorization|password|passwd|passphrase|client_?secret|private_?key|secret_?access_?key|access_?key_?id|session_?key|session_?cookie|credentials?|secrets?|token|cookie)$/i;
-const ASSIGNMENT_KEY = '(?:[a-z][a-z0-9]*_)*(?:api_?key|access_?token|refresh_?token|id_?token|auth_?token|password|passwd|passphrase|client_?secret|private_?key|secret_?access_?key|access_?key_?id|session_?key|session_?cookie|credential|secret|token)';
-const SECRET_ASSIGNMENT = new RegExp(`(?<![a-z0-9_])((?:["']?${ASSIGNMENT_KEY}["']?)\\s*[:=]\\s*)("(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\\[REDACTED\\]|[^\\s,;\\]}]+)`, 'gi');
+const ASSIGNMENT_KEY = '(?:[a-z0-9]+[-_]|-)*(?:api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|auth[-_]?token|password|passwd|passphrase|client[-_]?secret|private[-_]?key|secret[-_]?access[-_]?key|access[-_]?key[-_]?id|session[-_]?key|session[-_]?cookie|credential|secret|token)';
+const SECRET_ASSIGNMENT = new RegExp(`(?<![a-z0-9_-])((?:["']?${ASSIGNMENT_KEY}["']?)\\s*[:=]\\s*)("(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\\[REDACTED\\]|[^\\s,;\\]}]+)`, 'gi');
 
-function redactText(text) {
+function redactText(text, preserveLines = false) {
+  const replace = (original, safe) => preserveLines
+    ? safe + '\n'.repeat(Math.max(0, (original.match(/\n/g) ?? []).length - (safe.match(/\n/g) ?? []).length)) : safe;
   return text
-    .replace(/-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----[\s\S]*?(?:-----END (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----|$)/g, REDACTED)
+    .replace(/-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----[\s\S]*?(?:-----END (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----|$)/g, match => replace(match, REDACTED))
     .replace(/\b(?:sk-(?:(?:proj|svcacct)-)?[A-Za-z0-9_-]{8,}|gh[pousr]_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,}|xox[baprs]-[A-Za-z0-9-]{8,}|AKIA[A-Z0-9]{16})\b/g, REDACTED)
-    .replace(/((?:authorization|proxy-authorization)\s*:\s*)(?:Bearer|Basic)\s+[^\s,;]+/gi, `$1${REDACTED}`)
-    .replace(/\bBearer\s+[A-Za-z0-9._~+\/-]{8,}={0,2}/gi, `Bearer ${REDACTED}`)
+    .replace(/((?:authorization|proxy-authorization)\s*:\s*)(?:Bearer|Basic)\s+[^\s,;]+/gi, (match, prefix) => replace(match, `${prefix}${REDACTED}`))
+    .replace(/\bBearer\s+[A-Za-z0-9._~+\/-]{8,}={0,2}/gi, match => replace(match, `Bearer ${REDACTED}`))
     .replace(/((?:set-cookie|cookie)\s*:\s*)[^\r\n]+/gi, `$1${REDACTED}`)
-    .replace(SECRET_ASSIGNMENT, (_match, prefix, value) => {
+    .replace(SECRET_ASSIGNMENT, (match, prefix, value) => {
       const quote = value.startsWith('"') || value.startsWith("'") ? value[0] : '';
-      return `${prefix}${quote}${REDACTED}${quote}`;
+      return replace(match, `${prefix}${quote}${REDACTED}${quote}`);
     })
     .replace(/(https?:\/\/)[^\s/:@]+:[^\s/@]+@/gi, `$1${REDACTED}@`);
 }
 
-/** Return a redacted copy of JSON data. Ordinary prose and token counts remain intact. */
-export function redact(value) {
+/** Return a redacted copy; optional line preservation keeps text source references valid. */
+export function redact(value, { preserveLines = false } = {}) {
   const seen = new WeakSet();
   function visit(item) {
-    if (typeof item === 'string') return redactText(item);
+    if (typeof item === 'string') return redactText(item, preserveLines);
     if (item === null || typeof item !== 'object') return item;
     if (seen.has(item)) return '[Circular]';
     seen.add(item);
     const result = Array.isArray(item)
       ? item.map(visit)
       : Object.fromEntries(Object.entries(item).map(([key, child]) => [
-        redactText(key), SECRET_KEY.test(key.replace(/[-\s]/g, '_')) ? REDACTED : visit(child),
+        redactText(key, preserveLines), SECRET_KEY.test(key.replace(/[-\s]/g, '_')) ? REDACTED : visit(child),
       ]));
     seen.delete(item);
     return result;

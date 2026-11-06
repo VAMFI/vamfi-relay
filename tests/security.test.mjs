@@ -58,6 +58,32 @@ test('redact preserves ordinary structured data and safely handles JSON prototyp
   assert.equal(redact('The password reset form should describe the API key field.'), 'The password reset form should describe the API key field.');
 });
 
+test('redact recognizes hyphenated credential assignments and headers while preserving ordinary prose', () => {
+  const input = 'api-key: SYNTHETIC_CANARY_ONE\nX-API-Key: SYNTHETIC_CANARY_TWO\nclient-secret="SYNTHETIC_CANARY_THREE"\nordinary: visible\n';
+  assert.equal(redact(input), 'api-key: [REDACTED]\nX-API-Key: [REDACTED]\nclient-secret="[REDACTED]"\nordinary: visible\n');
+  assert.equal(redact('Describe the api-key field and X-API-Key header.'), 'Describe the api-key field and X-API-Key header.');
+  assert.equal(redact('123-password=SYNTHETIC_CANARY --password=SYNTHETIC_CANARY'), '123-password=[REDACTED] --password=[REDACTED]');
+  const started = performance.now();
+  const longKey = 'word-'.repeat(16000);
+  assert.equal(redact(longKey), longKey);
+  assert.ok(performance.now() - started < 1500, 'Hyphenated input must not restart at every suffix.');
+});
+
+test('optional line preservation redacts complete multiline secrets without changing later source line numbers', () => {
+  const input = 'before\n-----BEGIN PRIVATE KEY-----\nSYNTHETIC_PRIVATE\n-----END PRIVATE KEY-----\nneedle\nAPI_KEY="one\ntwo"\nlast needle\n';
+  const kept = redact(input, { preserveLines: true });
+  assert.equal(kept.split('\n').length, input.split('\n').length);
+  assert.equal(kept.split('\n')[4], 'needle');
+  assert.equal(kept.split('\n')[7], 'last needle');
+  assert.ok(!kept.includes('SYNTHETIC_PRIVATE'));
+  assert.ok(!kept.includes('one'));
+  assert.ok(!kept.includes('two'));
+  assert.equal(redact(input).split('\n')[2], 'needle', 'default redaction keeps its existing compact output');
+  assert.equal(redact(kept, { preserveLines: true }), kept);
+  const auth = 'Authorization: Bearer\nSYNTHETIC_AUTH_VALUE\nafter';
+  assert.equal(redact(auth, { preserveLines: true }).split('\n')[2], 'after');
+});
+
 test('request boundary accepts all exact loopback hosts with matching origins', () => {
   for (const host of ['localhost:4317', '127.0.0.1:4317', '[::1]:4317']) {
     assert.doesNotThrow(() => validateRequest(request(host, `http://${host}`), 4317));

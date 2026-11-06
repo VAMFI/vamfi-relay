@@ -9,9 +9,9 @@ import http from 'node:http';
 import { acquireStoreLock } from '../server/store.mjs';
 
 class IdleAdapter extends EventEmitter {async close(){} async connect(){return {version:'fixture'};}}
-async function fixture(t){
+async function fixture(t,options={}){
   const dir=await mkdtemp(join(tmpdir(),'relay-http-'));
-  const app=await createApp({dataDir:dir,workspace:dir,adapter:new IdleAdapter()});
+  const app=await createApp({dataDir:dir,workspace:dir,adapter:new IdleAdapter(),...options});
   await new Promise(r=>app.server.listen(0,'127.0.0.1',r));
   const base=`http://127.0.0.1:${app.server.address().port}`;
   t.after(async()=>{await app.close();await rm(dir,{recursive:true,force:true});});
@@ -46,6 +46,29 @@ test('sample data never mutates live data and export validates its date',async t
   const demo=await (await fetch(base+'/api/demo')).json();assert.equal(demo.meta.sample,true);assert.ok(demo.tasks.length>0);
   assert.equal(app.store.state.tasks.length,0);assert.equal((await fetch(base+'/api/export?date=bad')).status,400);
   const out=await (await fetch(base+'/api/export?date=2026-11-05')).json();assert.equal(out.tasks.length,0);
+});
+test('Hermes HTTP controls retain project permissions and read the saved outcome without resubmission',async t=>{
+  const hermes=new IdleAdapter();let checks=0;
+  hermes.connect=async()=>({version:'0.23.0'});
+  hermes.resumeThread=async input=>({id:input.id});
+  hermes.recover=async input=>{checks++;return {...input,state:'completed',result:'Verified synthetic result'};};
+  const {app,post}=await fixture(t,{hermesAdapter:hermes});
+  const project=app.store.state.projects[0];
+  assert.equal((await post('/api/providers/hermes/connect',{},'https://attacker.example')).status,403);
+  assert.equal((await post('/api/providers/hermes/connect',{})).status,200);
+  assert.equal(app.store.state.providers.hermes.version,'0.23.0');
+  assert.equal((await post(`/api/projects/${project.id}`,{provider:'hermes',permissionMode:'workspace-write'})).status,400);
+  assert.equal((await post(`/api/projects/${project.id}`,{provider:'hermes',permissionMode:'read-only'})).status,200);
+  const goal=app.runtime.board.createWork({projectId:project.id,title:'Inspect fixture',objective:'Read-only analysis'});
+  app.store.change(s=>{
+    s.threads.push({id:'hermes:local-http',provider:'hermes',role:'project',status:'waiting'});
+    s.tasks.push({id:'saved-hermes-run',provider:'hermes',kind:'project',workId:goal.id,projectId:project.id,threadId:'hermes:local-http',
+      workspace:project.workspace,permissionMode:'read-only',status:'waiting',providerOutcomeUnknown:true,turnId:'saved-admission',result:''});
+  });
+  assert.equal((await post('/api/tasks/saved-hermes-run/outcome',{})).status,200);
+  const task=app.store.state.tasks.find(t=>t.id==='saved-hermes-run');assert.equal(task.status,'completed');assert.equal(task.result,'Verified synthetic result');
+  assert.equal((await post('/api/tasks/saved-hermes-run/outcome',{})).status,200);assert.equal(checks,1);
+  assert.equal((await post('/api/tasks/missing/outcome',{})).status,400);
 });
 test('daily export retains cross-day outcomes, observed activity and original requests in the workspace timezone',async t=>{
   const {base,app}=await fixture(t);

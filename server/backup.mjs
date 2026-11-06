@@ -38,6 +38,8 @@ export function validateBackupState(state) {
   for (const message of state.messages) if (!string(message.role) || typeof message.text !== 'string') invalid();
   for (const project of state.projects) {
     if (!string(project.name) || !string(project.workspace) || !permissions.has(project.permissionMode) || !nullableString(project.threadId)) invalid();
+    if (project.provider !== undefined && !['codex','hermes'].includes(project.provider)) invalid();
+    if (project.provider === 'hermes' && project.permissionMode !== 'read-only') invalid();
   }
   for (const work of state.workItems) {
     if (!string(work.projectId) || !string(work.title) || !workStatuses.has(work.status) || !Array.isArray(work.evidence)) invalid();

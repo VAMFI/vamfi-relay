@@ -116,9 +116,9 @@ test('catalog methods read bounded metadata and history without starting or resu
   await assert.rejects(adapter.listThreadTurns({ threadId: 'external-1', limit: 21 }), /limit/);
 });
 
-test('unsupported catalog RPC classification never reveals provider messages or treats unrelated validation as unsupported', async t => {
+for (const prefix of ['', 'Invalid request: ']) test(`unsupported catalog RPC classification accepts prefix ${JSON.stringify(prefix)} without leaking diagnostics`, async t => {
   const { adapter } = await fixture(t, { catalog: { errors: {
-    'project/list': { code: -32600, message: 'unknown variant `project/list`, expected one of PRIVATE_SECRET_METHODS' },
+    'project/list': { code: -32600, message: prefix + 'unknown variant `project/list`, expected one of PRIVATE_SECRET_METHODS' },
     'memory/status': { code: -32600, message: 'invalid request PRIVATE_SECRET' },
     'thread/turns/list': { code: -32601, message: 'PRIVATE_SECRET' },
   } } });

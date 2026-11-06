@@ -135,9 +135,20 @@ export class Store {
     };
     migrate(this.state, workspace);
     this.state.connection = { provider: 'codex', status: 'disconnected', message: 'Connect your local Codex to continue.' };
+    if(this.state.providers?.hermes)this.state.providers.hermes={status:'disconnected',version:this.state.providers.hermes.version,readOnly:true};
     const interrupted = new Map();
     const held = new Map();
+    const remoteUnknown = new Set();
     for (const task of this.state.tasks.filter(active)) {
+      // Hermes execution belongs to its gateway; a Relay restart only detaches.
+      // Preserve capacity until an explicit outcome check or stop confirms it.
+      if (task.provider === 'hermes' && (task.turnStarting || task.turnId || task.providerOutcomeUnknown)) {
+        task.status = 'waiting'; task.queueState = null; task.providerOutcomeUnknown = true;
+        task.stopError = 'Hermes may still be running. Check its recorded outcome or stop this exact run before retrying.';
+        delete task.interruptSent;
+        if (task.workId) remoteUnknown.add(task.workId);
+        continue;
+      }
       if (task.kind === 'project' && task.status === 'queued' && ['waiting', 'held'].includes(task.queueState)) {
         task.queueState = 'held';
         task.queueReason = 'Relay restarted before this queued run began. Explicitly resume this work to allow scheduling.';
@@ -160,6 +171,10 @@ export class Store {
       }
     }
     for (const work of this.state.workItems) {
+      if (remoteUnknown.has(work.id)) {
+        work.recoveryRequired = true; if(!['paused','cancelled','completed'].includes(work.status))work.status = 'blocked'; work.updatedAt = timestamp();
+        work.nextAction = 'Check the existing Hermes run outcome or stop it. Reconnecting never repeats its prompt.';
+      }
       const runs = interrupted.get(work.id);
       const queued = held.get(work.id);
       if (runs?.length || queued?.length) {
