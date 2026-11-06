@@ -1,5 +1,20 @@
 # Verification log
 
+## Daily work slice — 2026-11-06 (unreleased)
+
+The dashboard now separates current goals/assignments from the selected day's linked requests, reports, observed activity, external notes and immutable completion reviews. This qualifies the daily-work slice, not the full multi-provider product goal.
+
+- **Automated:** 200/200 tests passed on Node 22.23.2 and Node 24.22.1. The clean 76-file source export installed with `npm ci --ignore-scripts`, passed all 200 tests and built; the audit reported zero vulnerabilities. No dependencies were added.
+- **Real Codex:** `node scripts/verify-daily.mjs --live` passed on macOS arm64 in five provider turns. Two specialists in separate disposable projects read different unpredictable file markers; exact findings returned to one persistent master. Request/goal links and agent reports were inspected through the daily projection. Restart preserved the master and both assignments without replay; a casual status question added no goal or specialist. The witness files and directory contents remained unchanged. All initial/final application and harness source hashes matched.
+- **Browser:** desktop and 390 CSS-pixel Chromium journeys passed date changes, project search, bounded-list expansion, original-request/task drill-down, master navigation and inert sample actions. Current assignments persisted across date changes. A real local API review followed by reopening retained its receipt; full nine-line text remained readable through disclosure. Injected HTML rendered literally with zero injected images. Page width/scroll width were 390/390 and dialog width/scroll width 364/364; Tab/Escape and zero console warnings/errors were observed.
+- **Independent review:** fixes cover pausing a specialist while its provider session opens, revalidating workspace identity before opening, and accessing long historical review text. Regressions prove no provider turn starts after a startup pause/cancel; missing, replaced and sensitive directories fail before opening. The reviewer independently reran 54 affected tests.
+- **Regression sensitivity:** isolated mutations that incorrectly restricted current assignments to the selected date or removed request-link deduplication caused the affected suites to fail. Shared source was not mutated.
+- **Existing installation:** backed up and restarted with no active tasks. All 17 task IDs, 41 message IDs, three goals, two projects, saved permissions and master identity matched the pre-upgrade snapshot. The live browser displayed the new daily panels and master button with no console warnings or errors.
+
+The first real daily pilot stopped at a harness comparison between a macOS temporary path alias and its canonical path. Its failure record was retained; canonicalizing the temporary root fixed the harness, and the later full run passed. Raw reports, local IDs and private screenshots stay in ignored `artifacts/local`; they are not published. The README screenshot contains only fictional sample data.
+
+Limits: older records may lack request links or immutable review receipts. Observed commands are not automatically classified as passing tests. External Codex chats still have unknown live status. Specialists return results through a synchronous tool response; guaranteed standalone result delivery after master failure and a second real adapter remain broader product work. This new slice has no tagged release yet; v0.4.0 remains the previous immutable release.
+
 ## v0.4 Codex workspace prototype — 2026-11-06
 
 Status: **local, clean-export, and public GitHub qualification passed**. The documentation editor inspected the real-provider report and browser record described below. Automated and rendered-check results were supplied by the integration lead; the documentation editor did not independently repeat model inference or browser interaction. Historical sections below remain historical.

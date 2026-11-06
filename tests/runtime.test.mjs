@@ -63,7 +63,8 @@ test('delegation executes a separate read-only thread and returns observed resul
   const {runtime,store,adapter}=await fixture(t);
   const {taskId}=await runtime.chat('Delegate a bounded review');await tick();
   const parent=store.state.tasks.find(t=>t.id===taskId);
-  const result=runtime.delegate(parent,{title:'Reviewer',instructions:'Inspect README'});await tick();
+  const result=runtime.delegate(parent,{title:'Reviewer',instructions:'Inspect README'});
+  await waitFor(()=>store.state.tasks.some(task=>task.kind==='worker' && task.turnId));
   assert.equal(adapter.starts[1].permissionMode,'read-only');assert.deepEqual(adapter.starts[1].tools,[]);
   adapter.complete('thread-2','README reviewed');const done=await result;
   assert.equal(done.result,'README reviewed');assert.equal(done.status,'completed');assert.equal(done.parentTaskId,taskId);
@@ -74,7 +75,8 @@ test('worker capacity is reserved before asynchronous startup and cancellation r
   const {taskId}=await runtime.chat('Delegate');await tick();const parent=store.state.tasks.find(t=>t.id===taskId);
   const first=runtime.delegate(parent,{title:'One',instructions:'Read README'});
   await assert.rejects(runtime.delegate(parent,{title:'Two',instructions:'Read README'}),e=>e.statusCode===409);
-  await tick();await runtime.cancel(taskId);await first;
+  await waitFor(()=>store.state.tasks.some(task=>task.kind==='worker' && task.turnId));
+  await runtime.cancel(taskId);await first;
   assert.equal(store.state.tasks.every(t=>t.status==='cancelled'),true);assert.equal(adapter.interrupts.length,2);
 });
 
@@ -173,6 +175,7 @@ test('cancelling worker during thread startup resolves delegation without starti
   const {runtime,store,adapter}=await fixture(t);const {taskId}=await runtime.chat('Delegate');await tick();
   let release;adapter.startThread=()=>new Promise(r=>{release=r;});
   const result=runtime.delegate(store.state.tasks.find(t=>t.id===taskId),{title:'Starting',instructions:'Read README'});
+  await waitFor(()=>typeof release==='function');
   const worker=store.state.tasks.find(t=>t.kind==='worker');await runtime.cancel(worker.id);
   release({id:'late-worker'});
   const finished=await result;assert.equal(finished.status,'cancelled');assert.equal(runtime.waiters.size,0);assert.equal(adapter.turns.length,1);

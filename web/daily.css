@@ -1,0 +1,60 @@
+.overview-heading-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.daily-overview-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;margin-bottom:23px;align-items:start}
+.daily-overview-columns>.panel{min-width:0}
+.daily-overview-columns .goal-list{grid-template-columns:1fr}
+.daily-history-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;align-items:start}
+.daily-panel-heading{padding-bottom:16px}
+.daily-panel-heading .heading-with-dot>svg{color:var(--green)}
+.daily-panel-heading p{font-size:11px;line-height:1.6;color:var(--muted);margin-top:8px}
+.daily-records{list-style:none;margin:0;padding:0}
+.daily-record{padding:18px 23px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+.daily-record-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:10px;color:var(--muted);line-height:1.6}
+.daily-record-meta time{flex-shrink:0}
+.daily-evidence{font-weight:600;color:var(--ink)}
+.daily-evidence-review{color:var(--green)}
+.daily-evidence-observation{color:var(--coral-dark)}
+.daily-record-title{font-size:12px;font-weight:600;line-height:1.6;margin:7px 0 0}
+.daily-text{font-size:12px;line-height:1.75;color:var(--ink);white-space:pre-wrap;margin-top:7px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.request-text{-webkit-line-clamp:4}
+.daily-text.daily-text-expanded{display:block;-webkit-line-clamp:unset;overflow:visible}
+.daily-text-disclosure{margin-top:8px;font-size:10px}
+.daily-links{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin-top:11px}
+.daily-links:empty{display:none}
+.daily-goal-link{white-space:normal;min-width:0;text-align:left;line-height:1.6;color:var(--green)}
+.daily-goal-link>span{overflow-wrap:anywhere;min-width:0}
+.daily-detail-link{margin-top:12px}
+.daily-expand{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 23px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}
+.daily-footnote{border-top:1px solid var(--line);padding:13px 23px;font-size:10px;color:var(--muted);line-height:1.8}
+.daily-empty{font-size:12px;line-height:1.8;color:var(--muted);padding:20px 23px 28px}
+.assignment-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.assignment-title{display:flex;align-items:flex-start;gap:8px;background:transparent;padding:0;text-align:left;font-size:12px;font-weight:600;line-height:1.6;min-width:0;overflow-wrap:anywhere}
+.assignment-title:hover{color:var(--coral-dark)}
+.assignment-title>svg{margin-top:3px;color:var(--muted)}
+.assignment-heading .status{font-size:10px}
+.assignment-facts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px 16px;margin:13px 0 11px;font-size:11px;line-height:1.6}
+.assignment-facts>div:last-child{grid-column:1/-1}
+.assignment-facts dt{font-size:10px;color:var(--muted);margin-bottom:2px}
+.assignment-facts dd{margin:0;overflow-wrap:anywhere}
+.assignment-unassigned,.assignment-step{font-size:11px;color:var(--muted);line-height:1.6}
+.assignment-parent{display:flex;align-items:baseline;gap:8px;margin-top:9px;font-size:10px;color:var(--muted);line-height:1.6}
+.assignment-parent>.text-button{white-space:normal;text-align:left;line-height:1.6;min-width:0}
+.assignment-step{margin-top:9px}
+.assignment-checkpoint{margin-top:11px}.assignment-checkpoint>span{font-size:10px;color:var(--muted);font-weight:600}
+.assignment-summary{font-size:11px;color:var(--muted);-webkit-line-clamp:2}
+.assignment-footer{margin-top:13px;flex-wrap:wrap;font-size:9px}
+.assignment-footer .text-button{font-size:10px}
+.daily-attention{margin-bottom:23px}
+.daily-attention>.panel-heading{padding-bottom:15px}
+.daily-attention .heading-with-dot>svg{color:var(--coral-dark)}
+.attention-goal{display:flex;align-items:center;gap:16px;justify-content:space-between;background:transparent;padding:14px 23px;width:100%;border-top:1px solid var(--line);text-align:left;line-height:1.6}
+.attention-goal:hover{background:var(--background)}
+.attention-goal>span:first-child{min-width:0;flex:1}
+.attention-goal strong{display:block;font-size:12px;font-weight:600;overflow-wrap:anywhere}
+.attention-goal>span:first-child>span{display:block;font-size:11px;color:var(--muted);overflow-wrap:anywhere;margin-top:3px}
+.attention-goal>span:first-child>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.attention-reason{display:flex;align-items:center;gap:7px;flex-shrink:0;font-size:10px;color:var(--coral-dark)}
+.overview-goal-expansion{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:3px 23px 15px;font-size:10px;color:var(--muted)}
+.overview-search-context{font-size:11px;color:var(--muted);margin:-7px 0 20px;overflow-wrap:anywhere}
+@media(max-width:1100px){.overview-heading-actions{justify-content:flex-start}.overview-page .page-heading{align-items:flex-start;flex-direction:column;gap:13px}.daily-overview-columns,.daily-history-grid{gap:17px}}
+@media(max-width:900px){.daily-overview-columns,.daily-history-grid{grid-template-columns:1fr}.daily-overview-columns .goal-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.overview-heading-actions{width:100%;gap:8px}.overview-heading-actions>.button{font-size:10px;padding:10px 12px}.daily-overview-columns .goal-list{grid-template-columns:1fr}.daily-panel-heading,.daily-record{padding:16px}.daily-footnote,.daily-expand,.overview-goal-expansion{padding:13px 16px}.daily-empty{padding:16px 16px 24px}.daily-attention>.panel-heading{padding:16px}.attention-goal{padding:14px 16px;flex-wrap:wrap;gap:6px}.attention-goal>span:first-child{flex-basis:100%}.attention-reason{font-size:10px}.daily-panel-heading h2,.daily-attention h2{font-size:13px}.daily-record-meta{font-size:10px;gap:8px}.assignment-heading .status{font-size:9px}.assignment-footer{font-size:9px}.assignment-facts{gap:9px 12px}.daily-record-title,.daily-text{font-size:12px}.daily-overview-columns,.daily-history-grid{gap:16px;margin-bottom:16px}}

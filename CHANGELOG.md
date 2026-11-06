@@ -2,6 +2,22 @@
 
 Versions below describe the local prototype. Verification records distinguish shipped source behavior, fixture results, and real-provider checks.
 
+## Unreleased — daily work dashboard
+
+### Added
+
+- Dashboard home with date-specific linked requests and progress, current agent assignments across dates, and concrete attention/next-action links to one master conversation.
+- Explicit original-request links for goal actions and optional goal-scoped, read-only specialist assignments.
+- Immutable completion-review receipts, including full historical text after a goal is reopened. Agent reports, observations and user reviews have separate labels.
+- A bounded real-Codex qualification script for two project specialists, result delivery, daily attribution and restart without replay.
+
+### Fixed
+
+- Pausing or cancelling an opening specialist prevents its provider turn from starting.
+- Specialist workspaces are revalidated before opening; missing or replaced directories fail safely.
+
+Local qualification passed: 200 tests on Node 22 and 24, desktop/mobile browser checks, and a five-turn real-Codex two-project specialist journey with restart. It does not qualify a second provider or complete the broader product goal. See [verification](docs/VERIFICATION.md).
+
 ## 0.4.0 — 2026-11-06 (open-source preview)
 
 ### Added

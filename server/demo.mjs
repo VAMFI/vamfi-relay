@@ -54,6 +54,14 @@ export function demoSnapshot() {
     messages.push({id:`${taskId}-notification`,threadId:'sample-main',taskId,workId,projectId:project.id,channel:'master',source:'project',role:'system',text:`Sample project update · ${project.name}\n${work.title}\n${result}`,createdAt:task.completedAt,status:'complete'});
   }
   for(const work of workItems) Object.assign(work,{notes:[],plan:null,planHistory:[],recoveryRequired:false});
+  for (const [index, workId] of ['sample-goal-onboarding','sample-goal-performance','sample-goal-release'].entries()) {
+    const work=workItems.find(item=>item.id===workId);
+    events.push({id:`sample-request-link-${index}`,type:'work_request',title:'Request linked to goal',taskId:`sample-task-0-${index}`,threadId:'sample-main',workId,projectId:work.projectId,createdAt:at(0,9+index)});
+  }
+  for (const task of tasks.filter(item=>item.kind==='worker')) {
+    Object.assign(task,{workId:'sample-goal-release',projectId:'sample-fieldnotes',workspace:'/projects/fieldnotes',permissionMode:'read-only'});
+    Object.assign(threads.find(thread=>thread.id===task.threadId),{projectId:'sample-fieldnotes',workspace:'/projects/fieldnotes',permissionMode:'read-only'});
+  }
   const performance=workItems.find(item=>item.id==='sample-goal-performance');
   const profileTask=tasks.find(item=>item.id==='sample-goal-performance-run');
   const profileCheckpoint={state:'ready',summary:'Sample agent report: the render trace is recorded and ready for a bounded comparison. This is not independent verification.',createdAt:profileTask.completedAt,source:'agent_report'};
