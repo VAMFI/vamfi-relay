@@ -25,7 +25,7 @@ The dashboard automatically discovers stored Codex chats with provider project m
 
 A reviewed handoff copies bounded context into one Relay-owned master conversation. It preserves the source chat and does not inherit its execution permissions. Project registration, explicit write settings, reviewed finite plans, bounded queues, interruption/retry acknowledgment, and final review govern subsequent work. Ordinary questions stay in chat.
 
-This release remains local and Codex-only. Source distribution on GitHub is separate from running a public service or publishing an npm package.
+The tagged v0.4 release is local and Codex-only. Current main adds the separately qualified Hermes v0.23.0 read-only adapter; the latest [verification log](VERIFICATION.md) defines its limits. Source distribution on GitHub is separate from running a public service or publishing an npm package.
 
 ## Historical qualification
 
@@ -42,3 +42,9 @@ More structured retrieval, retention/deletion controls, and reviewed memory prop
 ## Later: community sharing
 
 Public sharing and multi-user use require a separate design for authentication, authorization, tenant isolation, secrets, retention, abuse prevention, and deployment operations. Arbitrary-agent plugin execution requires its own capability and trust model. Neither is part of this local prototype's acceptance.
+
+## Current local prototype milestone
+
+The daily dashboard, asynchronous specialists, request-linked work controls, optional reviewed skill revisions and Codex/Hermes project execution have passed local qualification. One Codex master can coordinate multiple project/provider sessions, receive attributable results and preserve context through a Relay-process crash. Public GitHub source delivery remains separate from enabling community sharing.
+
+Future work: qualify Claude when native sign-in is available; assess other providers individually; test additional operating systems and gateway restart scenarios; refine onboarding with user feedback. Public skill/community sharing, hosted service, automatic installation of generated skills and arbitrary provider execution are deferred.

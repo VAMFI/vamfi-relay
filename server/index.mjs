@@ -6,9 +6,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Store, id, timestamp, active } from './store.mjs';
 import { Runtime, problem } from './runtime.mjs';
 import { CodexAdapter } from './adapters/codex.mjs';
+import { HermesAdapter } from './adapters/hermes.mjs';
 import { codexCommand } from './codex-command.mjs';
 import { validateRequest, redact } from './security.mjs';
-import { previewSkill } from './skills.mjs';
+import { previewSkill, createReviewedSkill, reviseReviewedSkill } from './skills.mjs';
 import { demoSnapshot } from './demo.mjs';
 import { serviceIdentity } from './service.mjs';
 import { CodexCatalog } from './catalog.mjs';
@@ -22,7 +23,7 @@ export async function createApp(options={}) {
   const store=new Store(dataDir,workspace);
   let adapter;
   try{adapter=options.adapter || new CodexAdapter({cwd:root,command:await codexCommand()});}catch(error){store.close();throw error;}
-  const runtime=new Runtime(store,adapter);
+  const runtime=new Runtime(store,adapter,{hermes:options.hermesAdapter || new HermesAdapter()});
   // Discovery owns a separate process: a stalled history read cannot terminate executing work.
   const catalog=options.catalog || new CodexCatalog({store,adapter:options.catalogAdapter || new CodexAdapter({cwd:root,command:await codexCommand()}),codexHome:options.codexHome});
   runtime.catalog=catalog;
@@ -92,13 +93,14 @@ export async function createApp(options={}) {
           return json(202,{stopping:true,instanceId:identity.instanceId});
         }
         if(url.pathname==='/api/connect'){await runtime.connect();return json(200,store.snapshot());}
+        if(url.pathname==='/api/providers/hermes/connect'){await runtime.connectProvider('hermes');return json(200,store.snapshot());}
         if(url.pathname==='/api/codex/refresh') {
           if(Object.keys(body).some(key=>!['loadMore','archived'].includes(key)) || ['loadMore','archived'].some(key=>key in body && typeof body[key]!=='boolean'))throw problem(400,'Supply boolean catalog refresh options.');
           return json(200,await catalog.list({refresh:body.loadMore!==true,loadMore:body.loadMore===true,archived:body.archived===true}));
         }
         if(url.pathname==='/api/codex/handoff')return json(202,await handoff.continue(body));
         if(url.pathname==='/api/settings'){await runtime.settings(body);return json(200,store.snapshot());}
-        if(url.pathname==='/api/chat')return json(202,await runtime.chat(body.text,body.skillIds));
+        if(url.pathname==='/api/chat')return json(202,await runtime.chat(body.text,body.skillIds,undefined,body.skillSelections));
         if(url.pathname==='/api/projects')return json(201,await runtime.board.registerProject(body));
         const project=url.pathname.match(/^\/api\/projects\/([\w-]+)$/);
         if(project)return json(200,runtime.updateProject(project[1],body));
@@ -116,17 +118,23 @@ export async function createApp(options={}) {
         const work=url.pathname.match(/^\/api\/work\/([\w-]+)$/);
         if(work)return json(200,await runtime.updateWork(work[1],body));
         const cancel=url.pathname.match(/^\/api\/tasks\/([\w-]+)\/cancel$/);
+        const outcome=url.pathname.match(/^\/api\/tasks\/([\w-]+)\/outcome$/);
+        if(outcome){await runtime.recoverTask(outcome[1]);return json(200,store.snapshot());}
         if(cancel){await runtime.cancel(cancel[1]);return json(200,store.snapshot());}
         const approval=url.pathname.match(/^\/api\/approvals\/([\w-]+)$/);
         if(approval){await runtime.approve(approval[1],body.decision);return json(200,store.snapshot());}
         if(url.pathname==='/api/skills/preview')return json(200,previewSkill(body.content));
         if(url.pathname==='/api/skills') {
-          const preview=previewSkill(body.content);
-          if(body.reviewed!==true || preview.hash!==body.hash)throw problem(400,'Review this exact document before importing it.');
-          if(preview.blocked)throw problem(400,'This document contains blocked content. Remove it before importing.');
-          if(store.state.skills.some(s=>s.name===preview.name))throw problem(409,'A skill with this name already exists.');
-          const skill={id:id(),...preview,enabled:false,createdAt:timestamp()};
+          const skill=createReviewedSkill(body);
+          if(store.state.skills.some(s=>s.name===skill.name))throw problem(409,'A skill with this name already exists. Review a new revision of that skill instead.');
           store.change(s=>{s.skills.push(skill);store.event('skill','Skill reviewed and saved',skill.name);});return json(201,skill);
+        }
+        const skillRevision=url.pathname.match(/^\/api\/skills\/([\w-]+)\/revisions$/);
+        if(skillRevision) {
+          const current=store.state.skills.find(skill=>skill.id===skillRevision[1]);if(!current)throw problem(404,'Skill not found.');
+          const revised=reviseReviewedSkill(current,body);
+          store.change(s=>{s.skills[s.skills.findIndex(skill=>skill.id===current.id)]=revised;store.event('skill','Skill revision reviewed and saved',`${revised.name} · revision ${revised.revision} · disabled until enabled`);});
+          return json(201,revised);
         }
         const skillPath=url.pathname.match(/^\/api\/skills\/([\w-]+)$/);
         if(skillPath) {

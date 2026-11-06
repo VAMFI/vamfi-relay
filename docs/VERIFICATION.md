@@ -1,5 +1,25 @@
 # Verification log
 
+## Hermes projects, conversation controls and skill revisions — 2026-11-06 (unreleased)
+
+**Local qualification passed.** The clean 95-file source export installed with `npm ci --ignore-scripts`, passed **299/299 tests on Node 22.23.2 and Node 24.22.1** with no skips/cancellations, and built successfully. The dependency audit reported zero vulnerabilities. No npm dependencies were added; live Hermes uses the separately installed native Python environment.
+
+The real production-adapter pilot `node scripts/verify-providers.mjs --live` passed nine phases in **11 provider turns**, against Codex 0.163.0-alpha.10.2 and Hermes v0.23.0 on macOS, from 08:40:50 to 08:42:35 UTC:
+
+- One persistent Codex master naturally routed accepted project work to concurrent Codex Alpha and Hermes Beta sessions. A casual question created no goal or project run.
+- Both projects returned different unpredictable file markers. Hermes used the production bounded MCP reader, with the marker absent from the request. Its follow-up reused the same session and recalled the marker without a tool call.
+- A further master response completed while Hermes remained active. Stop then received the exact admission’s terminal interruption.
+- The harness killed only its owned Relay child after persisting a Hermes admission. A new process recovered the existing receipt through the saved submission/admission; there was one submission and one result delivery, with no automatic replay. The master identity survived and remained usable.
+- Synthetic project files and directory contents were unchanged. All 44 initial/final application, script, package and contract hashes matched. Root rechecked those hashes against the working source before updating documentation. No execution source changed afterward.
+
+Independent review passed 35 adapter/runtime tests and 13 skill/provenance tests. Review reproduced and fixed delayed-receipt ownership races in both Node and Python, a terminal notification arriving before recovery resumed, false uncertainty before prompt submission, false shutdown completion and lost user pause/cancel state. The read-only MCP review separately passed 32 boundary/protocol tests, including sensitive-root denial, file identity checks and credential redaction.
+
+Chromium browser QA used a separate synthetic provider instance: request-linked active assignment cards after the master reply, unknown outcome → same-run Check → confirmed Stop, provider locks during active work, Hermes write-option denial, exact skill review/save/enable/select, disabled new revision, preserved old content and revision-one request receipt after revision two, explicit reselection, sample send disabled, keyboard Tab/Escape, and no console warnings/errors. At measured 390 CSS pixels, page width/scroll width were 390/390, assignment 322/322, and dialog 364/364. Temporary viewport settings were reset. A dashboard badge was corrected to show Outcome unknown instead of generic Waiting. This is targeted UX evidence, not an accessibility certification.
+
+**Limits:** Hermes is qualified for bounded read-only project analysis through its v0.23.0 local gateway. It cannot edit files, run terminal commands, execute reviewed automatic plans, receive Relay optional skills or import existing Hermes chats. MCP restrictions are an application tool boundary, not an OS sandbox. This pilot proves Relay-process crash recovery after a persisted admission; it does not prove a cold gateway/OS crash, or a real lost-submit-acknowledgment fault. Those protocol cases have fixture coverage. Cancellation was confirmed during active work, without claiming it occurred inside an active production tool. Recovery restores the final result/current state, not every missed intermediate event. Claude qualification is deferred. Other platforms and versions remain unqualified.
+
+Raw reports, provider state, paths and screenshots remain private. Public CI and the installed-dashboard upgrade are recorded by the resulting pull request and release handoff; they were pending when this source snapshot was prepared.
+
 ## Responsive background specialists — 2026-11-06 (unreleased)
 
 The independent review found no remaining blocking issue after fixes. **228/228 tests passed on Node 22.23.2 and Node 24.22.1**, with zero skipped/cancelled tests. The reviewer independently ran 116 affected runtime, work and HTTP tests. Isolated in-memory mutations detected incorrect parent-lifetime rules, admission payload conflicts and duplicate recovery receipts; shared source was not mutated.

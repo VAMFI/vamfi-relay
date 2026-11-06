@@ -6,7 +6,7 @@ Working across Codex chats makes it easy to lose the thread: which project was t
 
 Connect the Codex installation on your machine. Relay discovers stored chats, groups them by their recorded project directory, and lets you inspect history before continuing in Relay. Meaningful goals appear on the dashboard; casual questions stay in chat. Project agents work in separate sessions and report progress and evidence back to the same conversation.
 
-**Prototype scope:** Codex is the only implemented provider. Relay observes live execution that it owns; existing desktop chats are historical context with **unknown external live status**. It does not take over a desktop chat or monitor every Codex process on your computer.
+**Prototype scope:** Codex runs the master conversation and full project workflows. The optional Hermes adapter adds bounded read-only project analysis; its qualification and limits are recorded below. Relay observes live execution that it owns; existing desktop chats are historical context with **unknown external live status**. It does not take over a desktop chat or monitor every Codex process on your computer.
 
 ## Run locally
 
@@ -37,15 +37,25 @@ Start on **Dashboard**. Work in motion and Who is working show current goals and
 1. **Open your Codex workspace.** Relay discovers stored chat metadata through the installed Codex app-server and groups it by recorded working directory, using Codex project names when available. Discovery does not start tasks or grant project write access. If discovery is unavailable, inspect Connections and refresh after resolving the provider issue.
 2. **Find the project.** Browse its chats and load the history you need. The local generated memory summary, when available, is supplementary context; it may be incomplete or stale.
 3. **Continue in Relay.** Review the bounded context handoff, add your next request, and acknowledge that an external agent may still be working. Relay carries that context and its recorded project directory into the master conversation. Project execution uses separately registered Relay sessions. The original Codex chat remains untouched. Sending the reviewed context to Codex for a response uses your model service and account limits.
-4. **Give substantial work a goal.** Register the intended directory, specify an objective and next action, and choose its permissions. New registrations default to read-only. Ordinary conversation does not automatically become work in motion.
-5. **Review and run.** Queue one action or draft a plan of 1–8 ordered steps. Review the exact steps, choose automatic continuation or a pause after each, and approve the plan. The master can draft a plan but cannot approve it for you.
+4. **Give substantial work a goal.** Register the intended directory, specify an objective and next action, and choose its provider and permissions. New registrations default to read-only. Ordinary conversation does not automatically become work in motion.
+5. **Review and run.** Queue one action, or for a Codex project draft a plan of 1–8 ordered steps. Review the exact steps, choose automatic continuation or a pause after each, and approve the plan. The master can draft a plan but cannot approve it for you.
 6. **Review outcomes.** Work in motion shows ongoing goals across projects and dates. Needs you collects blockers, recovery holds, and review requests. Inspect the changes and evidence before adding a completion note and marking a goal done. New completion reviews remain in daily history if you later reopen the goal.
 
 Selecting another project preserves the master conversation. Each project has a persistent execution session and one active run at a time. Other accepted work waits in a durable queue. Background capacity is configurable from 1–3, shared by project runs and read-only specialists. Queued and held runs do not consume running capacity; the queue accepts at most 50 unfinished project runs.
 
-Independent read-only specialists can work in the background while you continue the master conversation. An accepted assignment returns immediately; its actual result arrives as a **Specialist update** with a link to inspect the assignment. A specialist survives the originating response ending or failing. Explicit Stop and goal pause/cancel still apply. Each specialist has a three-minute limit; an unconfirmed stop remains visible and retains its capacity until the provider confirms termination. Restart records interrupted work without replaying it.
+Independent read-only specialists can work in the background while you continue the master conversation. An accepted assignment returns immediately; its actual result arrives as a **Specialist update** with a link to inspect the assignment. A specialist survives the originating response ending or failing. Explicit Stop and goal pause/cancel still apply. Each specialist has a three-minute limit; an unconfirmed stop remains visible and retains its capacity until the provider confirms termination. Codex restart records interrupted work without replaying it; Hermes retains unknown remote outcomes until checked.
+
+The original request also shows its active assignments, recorded provider/access, and Inspect, Open goal, and Stop controls. Finished assignments keep their actual result receipts.
 
 A successful provider turn is an execution record, not proof that its goal is complete. A plan advances only after both a successful turn and a `ready` agent-reported checkpoint. Missing or blocked checkpoints stop advancement. Final acceptance remains a separate user action.
+
+## Optional Hermes projects
+
+Install and sign in to Hermes privately using its official instructions. Relay's initial adapter targets **Hermes v0.23.0**, its local gateway, and the Python interpreter in the source installation's `venv`. Other versions and remote gateway overrides are rejected. Codex remains required for the master conversation; Hermes is optional and does not connect at startup.
+
+Choose **Hermes · read-only** when registering or editing an idle project. Its session has only Relay's bounded project-relative list, read, and literal-search tools. Shell commands, file changes, network tools, inherited rules/memory/skills, and automatic plans are unavailable. Existing Codex plans remain visible if you change providers; switch back to Codex or use a separate goal without a plan. The adapter checks profile eligibility without changing global configuration and refuses conflicting hooks or custom context.
+
+This is an application tool boundary, not an operating-system sandbox. Native Hermes performs its own authentication; Relay does not collect credentials. Connections provides an optional connection check; an accepted Hermes run connects as needed. See [the provider contract](docs/PROVIDER-QUALIFICATION-CONTRACT.md), [transport research](docs/HERMES-ADAPTER-RESEARCH.md), and [verification status](docs/VERIFICATION.md).
 
 ## Discovery, memory, and privacy
 
@@ -55,7 +65,7 @@ Browsing the catalog alone sends no model prompt. During a conversation, the mas
 
 The memory view reads the known local generated summary when present. It does not recursively scan your home directory, copy authentication files, rewrite generated memory, or establish that an old summary is currently true. Imported history and memory are untrusted context, never permission to run commands.
 
-Relay's UI, catalog, and application records stay on your machine. Model requests use Codex and its configured remote service. Relay has no community publishing or cloud sync. Review exports, screenshots, logs, and backups before sharing: they can contain private conversations, project paths, and results.
+Relay's UI, catalog, and application records stay on your machine. Model requests use the selected installed provider and its configured remote model service. Relay has no community publishing or cloud sync. Review exports, screenshots, logs, and backups before sharing: they can contain private conversations, project paths, and results.
 
 ## Configuration
 
@@ -65,6 +75,7 @@ Relay's UI, catalog, and application records stay on your machine. Model request
 | Initial master/project directory | Repository `workspace/`, resolved from the server location | `RELAY_WORKSPACE` for fresh state |
 | HTTP port | `4318`, on loopback | `RELAY_PORT` (1024–65535) |
 | Codex executable | macOS app bundle, then `PATH` | `RELAY_CODEX_BIN` |
+| Optional Hermes source installation | `~/.hermes/hermes-agent` | `RELAY_HERMES_ROOT` |
 | Master and specialist permissions | Read-only | No write mode |
 | Registered project permissions | Read-only | Explicit workspace-write selection while idle |
 
@@ -76,13 +87,15 @@ mkdir "$evaluation_dir/workspace"
 RELAY_DATA_DIR="$evaluation_dir/data" RELAY_WORKSPACE="$evaluation_dir/workspace" RELAY_PORT=4319 npm start
 ```
 
-Choose directories intended for the work. Read-only restricts writes; it does **not** isolate filesystem reads to the selected workspace. Use a suitably isolated environment when unrelated local files must be inaccessible.
+Choose directories intended for the work. Codex read-only restricts writes; it does **not** isolate filesystem reads to the selected workspace. Use a suitably isolated environment when unrelated local files must be inaccessible.
 
 ## Pause, restart, and recovery
 
 Pausing or cancelling a goal stops further scheduling before requesting interruption of its active turn. An interruption acknowledgment alone does not establish that a turn or all its filesystem effects have ended. Inspect the final status and evidence.
 
-After restart or disconnection, never-started queued work stays **held** and active attempts become interrupted. Connecting Codex does not replay them. Open Needs you, review the goal, and resume explicitly. Failed, interrupted, cancelled, or uncertain plan steps require a retry acknowledgment; earlier attempts remain visible. Finished steps are retained. Changed project permissions require renewed plan review.
+After restart or disconnection, never-started queued work stays **held** and active Codex attempts become interrupted. Connecting Codex does not replay them. Open Needs you, review the goal, and resume explicitly. Failed, interrupted, cancelled, or uncertain plan steps require a retry acknowledgment; earlier attempts remain visible. Finished steps are retained. Changed project permissions require renewed plan review.
+
+Hermes work belongs to its local gateway and can outlive Relay. After lost contact or restart, its run stays **Outcome unknown** and retains capacity. **Check outcome** reads the exact saved submission/admission receipt; it never submits the prompt again. **Stop** targets that admission and needs a terminal provider result. An unresolved receipt stays visible. Recovery restores the final result/current status, not every missed intermediate event. Relay never kills a shared Hermes gateway.
 
 Automatic continuation is limited to the remaining steps of the exact approved plan. There is no automatic retry or unbounded execution loop.
 
@@ -107,6 +120,8 @@ Restore accepts a supported snapshot into an **empty, offline data directory**. 
 
 Relay accepts bounded Markdown documents. Preview their exact contents, review the warnings, and save them. Skills start disabled and need a separate enable action; select an enabled document as context for a future request.
 
+Use **Revise** to preview and review changed content under the same skill identity. Each revision starts disabled, keeps prior reviewed bytes, and must be enabled and selected again. Requests retain immutable revision/hash receipts; later edits cannot rewrite what an earlier request used. The library preserves up to twenty prior revisions and refuses further revisions at that bound. Selected skills apply to the Codex master; they are not injected into Hermes projects.
+
 Importing a skill does not run scripts, install packages, or change Codex's installed skills. Review is not a security certification. Native Codex plugins and installed skill instructions are not implicitly enabled by Relay.
 
 ## Upgrading existing state
@@ -123,9 +138,11 @@ npm run build
 
 The development command prints the UI URL; the API defaults to port 4318. Tests use disposable state and include provider fixtures. A real provider check is separate and consumes the contributor's authorized account usage.
 
-For a fictional browser preview without Codex, run `node scripts/preview-fixture.mjs` after building and open `http://127.0.0.1:4320`. Its chats, memory, and execution are synthetic.
+For a fictional browser preview without Codex, run `node scripts/preview-fixture.mjs` after building and open `http://127.0.0.1:4320`. Its chats, memory, and execution are synthetic. Set `RELAY_FIXTURE_PROVIDERS=1` to inspect active Codex/Hermes assignments and unknown-outcome controls without a real provider.
 
 To repeat the real two-project qualification, explicitly run `node scripts/verify-usecase.mjs --live`. It uses your existing Codex sign-in, creates synthetic source chats and temporary projects, and permits at most 30 provider turns. Evidence and disposable workspaces stay local for inspection; do not publish them. This optional check is separate from CI and uses your account's model usage.
+
+**Latest source qualification:** 299 automated checks passed on Node 22 and 24 from a clean installation. The opt-in `node scripts/verify-providers.mjs --live` passed nine Codex/Hermes phases in eleven turns, including concurrent projects, responsive master chat, saved Hermes context, exact cancellation and Relay-process crash recovery without replay. Desktop/mobile controls and reviewed skill revisions passed browser QA. This script uses native account usage and stops only its own test Relay process; see [verification and limits](docs/VERIFICATION.md).
 
 **v0.4 prototype verified and published.** Automated checks passed 174 tests on Node 22.23.2 and Node 24.22.1, the production build, and a dependency audit with zero reported vulnerabilities. A real Codex pilot passed ten phases across two projects and one master conversation, including reviewed handoffs, persistent goals, restart holds, and explicit retry. Desktop/mobile browser checks passed using synthetic provider events. Clean installation and service lifecycle passed. The public source passed [GitHub CI](https://github.com/VAMFI/vamfi-relay/actions/runs/42176481339) on Node 22 and 24. See [the verification log](docs/VERIFICATION.md) for evidence, source binding, and limits.
 

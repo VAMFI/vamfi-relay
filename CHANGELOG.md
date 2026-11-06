@@ -2,6 +2,17 @@
 
 Versions below describe the local prototype. Verification records distinguish shipped source behavior, fixture results, and real-provider checks.
 
+## Unreleased — Hermes projects and conversation controls
+
+- Optional Hermes v0.23.0 native gateway adapter for bounded read-only project analysis, persistent project sessions, and goal-scoped specialists under the Codex master.
+- Exact per-session MCP scope with bounded list/read/search; no shell, writes, network tools or inherited profile instructions. Version and profile eligibility checks fail closed.
+- Durable submission/admission recovery, explicit outcome checks, exact cancellation, and unknown outcomes retaining capacity across Relay restart. Late receipts cannot replace newer work.
+- Active assignments beside the original conversation request, provider labels and direct Inspect, Open goal, Check outcome, and Stop controls.
+- Reviewed skill revisions start disabled; earlier content remains inspectable and each request stores immutable skill provenance.
+- Optional Codex metadata fallback accepts the installed CLI's prefixed unsupported-method response without exposing raw diagnostics.
+
+Local qualification passed: 299 tests on Node 22 and 24 from a clean source export, desktop/mobile browser checks, and nine real Codex/Hermes phases in eleven turns, including actual Relay-process crash recovery. Public CI is recorded by the resulting pull request; see [verification](docs/VERIFICATION.md).
+
 ## Unreleased — responsive background work
 
 - Independent background specialist assignments return immediately, leaving the master available for another request. The original synchronous specialist tool remains supported.

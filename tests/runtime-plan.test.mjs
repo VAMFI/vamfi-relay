@@ -323,7 +323,7 @@ test('v3 tools rotate legacy master/project sessions once, preserve history, and
     state.messages.push({ id: 'legacy-master-message', threadId: 'legacy-master', channel: 'master', role: 'user', text: 'Continue the accepted project.', status: 'complete' }, { id: 'legacy-project-message', threadId: 'legacy-project', taskId: 'legacy-attempt', channel: 'execution', role: 'assistant', phase: 'final_answer', text: marker, status: 'complete' });
   });
   const chat = await f.runtime.chat('What is the current status?'); const master = await running(f, chat.taskId);
-  assert.notEqual(master.threadId, 'legacy-master'); assert.equal(f.store.state.threads.find(thread => thread.id === master.threadId).toolSpecVersion, 6);
+  assert.notEqual(master.threadId, 'legacy-master'); assert.equal(f.store.state.threads.find(thread => thread.id === master.threadId).toolSpecVersion, 7);
   assert.ok(f.adapter.starts.find(entry => entry.id === master.threadId).tools.some(tool => tool.name === 'relay_plan')); f.adapter.complete(master);
   const first = f.runtime.startProject(work.id); const current = await running(f, first.taskId);
   assert.notEqual(current.threadId, 'legacy-project'); assert.equal(f.store.state.threads.find(thread => thread.id === current.threadId).toolSpecVersion, 3);

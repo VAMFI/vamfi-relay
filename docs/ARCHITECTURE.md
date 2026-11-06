@@ -47,11 +47,11 @@ The master also has a bounded read-only `relay_history` tool for relevant catalo
 
 ## Ownership and lifecycle
 
-Relay owns project and goal records, task IDs, parent/child relationships, visible status, evidence, skill review state, and the background limit. Codex owns model execution and provider thread/turn IDs. A goal describes an outcome that may need several runs; a task records one execution. Ordinary questions and legacy tasks are not automatically promoted into goals.
+Relay owns project and goal records, task IDs, parent/child relationships, visible status, evidence, skill review state, and the background limit. The selected provider owns model execution and provider session/admission IDs. Codex remains the coordinator provider. A goal describes an outcome that may need several runs; a task records one execution. Ordinary questions and legacy tasks are not automatically promoted into goals.
 
 One read-only master serves all registered projects, with one master turn at a time. Its tools list/register projects, manage goals, draft plans, and queue individual project runs. `relay_run` persists a queue entry and returns acceptance promptly; execution later uses the project's saved thread while the master can answer other messages. Each project permits one executing or starting run, and project runs plus specialist workers share a configurable limit of 1–3.
 
-The durable scheduler scans in queue order and skips busy projects so independent projects can proceed. Waiting and held entries consume no running slot; a `starting` entry reserves one before the provider opens its turn. At most one unfinished project task belongs to a goal, with a total limit of 50 unfinished project tasks. Every accepted task captures immutable workspace and permission values. Dispatch compares them with current project policy and holds work if that policy or the approved plan changed.
+The durable scheduler scans in queue order and skips busy projects so independent projects can proceed. Waiting and held entries consume no running slot; a `starting` entry reserves one before the provider opens its turn. At most one unfinished project task belongs to a goal, with a total limit of 50 unfinished project tasks. Every accepted task captures immutable provider, workspace and permission values. Dispatch compares them with current project policy and holds work if that policy or the approved plan changed.
 
 The master's `relay_delegate` tool starts a distinct read-only specialist, associates it with the parent task, and waits for the actual result before answering that tool call. This differs from asynchronous project execution. Project executors receive no Relay delegation tools. Native multi-agent fanout is disabled so Relay owns its background capacity and attribution.
 
@@ -71,7 +71,7 @@ The browser separates running, queued, and held counts. **Needs you** includes b
 
 ## Adapter boundary
 
-The concrete adapter is `CodexAdapter`, an `EventEmitter`. Its constructor accepts optional `{ command: 'codex', cwd, requestTimeoutMs }`.
+The coordinator and full project adapter is `CodexAdapter`, an `EventEmitter`. Its constructor accepts optional `{ command: 'codex', cwd, requestTimeoutMs }`.
 
 | Method | Responsibility |
 | --- | --- |
@@ -136,3 +136,17 @@ Read-only restricts changes; it does not hide other readable files. A selected w
 Runtime approval cards are tied to a pending provider request; they do not authorize unrelated future actions or supply general account permissions. The runtime denies elevation requests from read-only tasks. Historical v0.1 approval coverage used controlled fixtures, not a live provider approval prompt. Permission policy and actual tool availability remain separate concerns.
 
 Skill import follows preview → review of exact content/hash → save disabled → explicit enable. Only selected enabled text can enter future user requests. Relay does not load bundled scripts, traverse imported paths, execute plugins, or alter installed Codex skills. Text review reduces accidental imports but cannot eliminate prompt injection.
+
+## Hermes gateway adapter
+
+`HermesAdapter` is optional and starts lazily. It uses an allowlisted local Python bridge to the installed Hermes v0.23.0 native client. The native client performs its own authentication. Relay neither reads authentication files nor exposes a generic gateway RPC endpoint. Connections checks metadata without inference; project dispatch chooses the recorded provider and never silently falls back.
+
+Every Hermes session freezes a canonical workspace, ignored inherited rules/memory/skills, six model turns, and exactly one Relay-owned MCP group. Eligible profiles have no conflicting hooks or custom context. The scoped MCP process supports only bounded list/read/literal search, rejects unsafe paths and filesystem objects, and rechecks file/path identity before returning text. This is an application tool restriction, not an OS sandbox. Native progressive tool wrappers are accepted only with the qualified underlying scope.
+
+Before `startTurn`, Runtime persists the task's submission boundary and uses its UUID as the stable submission ID. The bridge binds notifications and terminal receipts to the native admission. Recovery correlates the saved submission in that owned session and reads the exact receipt; it never submits another prompt. Both transport layers fence delayed receipts against changed ownership so a completed run cannot replace a newer run in the same session.
+
+Hermes gateway work may survive Relay disconnection. Unknown outcomes remain active, reserve capacity, and expose Check outcome/Stop while preserving the user's paused/cancelled goal state. Session-opening failure before submission is an ordinary startup failure. A Relay restart reconnects only when requested and never replays work. Close must confirm exact owned remote outcomes before releasing the service lock; it never stops the shared gateway. Final result/current state recovery is supported; full replay of intermediate tool/text events is not implemented.
+
+## Reviewed skill versions
+
+A skill keeps a stable library ID and bounded immutable revision history. Review binds exact Markdown bytes to a SHA-256 hash; every new revision starts disabled. Request selection freezes the accepted content plus revision ID/number/hash before asynchronous session startup, avoiding concurrent edits changing an accepted request. Historical task receipts do not look up the current library version. This context is available only to the Codex master, never implicitly to Hermes.

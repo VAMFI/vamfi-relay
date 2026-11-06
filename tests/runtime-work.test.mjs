@@ -479,7 +479,7 @@ test('v1 coordinator rotates once while its visible history and handoff survive'
   assert.notEqual(currentId, 'legacy-main'); assert.equal(adapter.resumes.length, 0);
   assert.deepEqual(store.state.messages.filter(message => history.some(old => old.id === message.id)), history);
   assert.ok(store.state.threads.some(thread => thread.id === 'legacy-main'));
-  assert.equal(store.state.threads.find(thread => thread.id === currentId).toolSpecVersion, 6);
+  assert.equal(store.state.threads.find(thread => thread.id === currentId).toolSpecVersion, 7);
   assert.ok(adapter.starts[0].tools.some(tool => tool.name === 'relay_run'));
   assert.match(adapter.turns[0].text, /LEGACY_HISTORY_MARKER/);
   adapter.finish(task(first.taskId));

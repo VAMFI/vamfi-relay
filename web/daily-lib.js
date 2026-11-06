@@ -51,7 +51,7 @@ export function dailyWork(snapshot, date, query = '') {
     const plan = [work?.plan, ...(work?.planHistory || [])].find(plan => plan?.id === task.planId);
     return {
       task, work, project, parent: taskById.get(task.parentTaskId) || null,
-      provider: task.provider === 'codex' ? 'Codex' : task.provider || 'Codex · legacy record',
+      provider: task.provider === 'codex' ? 'Codex' : task.provider === 'hermes' ? 'Hermes' : task.provider || 'Codex · legacy record',
       role: task.kind === 'worker' ? 'Background specialist' : 'Project executor',
       permissionMode: task.permissionMode || 'Not recorded',
       state: task.status === 'queued' && ['held', 'starting'].includes(task.queueState) ? task.queueState : task.status,

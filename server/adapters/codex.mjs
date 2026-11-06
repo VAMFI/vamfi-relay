@@ -336,7 +336,7 @@ export class CodexAdapter extends EventEmitter {
       // Classify only that exact method shape, retaining no provider diagnostics/data.
       error.unsupported = error.code === -32601 || (error.code === -32600
         && typeof message.error?.message === 'string'
-        && message.error.message.startsWith(`unknown variant \`${pending.method}\`, expected `));
+        && ['', 'Invalid request: '].some(prefix => message.error.message.startsWith(`${prefix}unknown variant \`${pending.method}\`, expected `)));
       pending.reject(error);
     } else pending.resolve(message.result);
   }
