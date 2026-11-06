@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { mkdtemp, mkdir, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, rename, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Store } from '../server/store.mjs';
@@ -80,7 +80,242 @@ test('casual conversation creates provider records but no work goals', async t =
   assert.equal(task(taskId).status, 'completed');
   assert.deepEqual(store.state.messages.filter(message => message.channel === 'master').map(message => message.role), ['user', 'assistant']);
   assert.equal(adapter.starts[0].permissionMode, 'read-only');
+  assert.deepEqual(store.state.events.filter(event => event.type === 'work_request'), []);
 });
+
+for (const action of ['create', 'update', 'draft', 'run']) test(`${action} records a durable, deduplicated request-to-goal association`, async t => {
+  const { runtime, store, adapter, alpha, work, task } = await fixture(t);
+  const existing = work(alpha);
+  const origin = await runtime.chat('Continue the accepted Alpha goal.');
+  const parent = task(origin.taskId);
+  const tool = action === 'draft' ? 'relay_plan' : action === 'run' ? 'relay_run' : 'relay_work';
+  const args = action === 'create' ? { action, projectId: alpha.id, title: 'New accepted Alpha goal', objective: 'Inspect and verify Alpha.' }
+    : action === 'update' ? { action, workId: existing.id, nextAction: 'Inspect the implementation.' }
+      : action === 'draft' ? { action, workId: existing.id, steps: [{ title: 'Inspect', instructions: 'Inspect Alpha and report evidence.' }] }
+        : { workId: existing.id, instructions: 'Inspect Alpha and report evidence.' };
+  const invoke = requestId => runtime.request({ id: requestId, method: 'item/tool/call', params: {
+    threadId: parent.threadId, turnId: parent.turnId, tool, arguments: args,
+  } });
+  await invoke('first-association');
+  const goal = action === 'create' ? store.state.workItems.find(item => item.title === args.title) : existing;
+  if (action === 'run') await assert.rejects(invoke('duplicate-run'), status(409));
+  else await invoke('repeated-association');
+  const links = store.state.events.filter(event => event.type === 'work_request');
+  assert.equal(links.length, 1);
+  assert.equal(task(parent.id).provider, 'codex');
+  if (action === 'run') assert.equal(store.state.tasks.find(item => item.workId === goal.id).provider, 'codex');
+  assert.equal(links[0].taskId, parent.id); assert.equal(links[0].threadId, parent.threadId);
+  assert.equal(links[0].workId, goal.id); assert.equal(links[0].projectId, alpha.id);
+  assert.ok(links[0].createdAt);
+  const persisted = JSON.parse(store.db.prepare('SELECT value FROM state WHERE id = 1').get().value);
+  assert.deepEqual(persisted.events.filter(event => event.type === 'work_request'), links);
+  assert.equal(task(parent.id).workId, undefined, 'The master request is not itself a goal run.');
+  adapter.finish(task(parent.id));
+});
+
+test('different requests can link to the same goal while read-only queries and failed mutations create no links', async t => {
+  const { runtime, store, adapter, alpha, work, task } = await fixture(t);
+  const goal = work(alpha);
+  for (const text of ['Set the next step.', 'Revise that same goal.']) {
+    const { taskId } = await runtime.chat(text);
+    const parent = task(taskId);
+    await runtime.request({ id: text, method: 'item/tool/call', params: {
+      threadId: parent.threadId, turnId: parent.turnId, tool: 'relay_work',
+      arguments: { action: 'update', workId: goal.id, nextAction: text },
+    } });
+    adapter.finish(parent);
+  }
+  const { taskId } = await runtime.chat('What is the current status?');
+  const parent = task(taskId);
+  for (const [tool, args] of [['relay_work', { action: 'list' }], ['relay_plan', { action: 'get', workId: goal.id }]]) {
+    await runtime.request({ id: tool, method: 'item/tool/call', params: { threadId: parent.threadId, turnId: parent.turnId, tool, arguments: args } });
+  }
+  await assert.rejects(runtime.request({ id: 'invalid-update', method: 'item/tool/call', params: {
+    threadId: parent.threadId, turnId: parent.turnId, tool: 'relay_work',
+    arguments: { action: 'update', workId: goal.id, status: 'invented-status' },
+  } }), status(400));
+  const links = store.state.events.filter(event => event.type === 'work_request');
+  assert.equal(links.length, 2); assert.equal(new Set(links.map(event => event.taskId)).size, 2);
+  assert.ok(links.every(event => event.workId === goal.id && event.taskId !== parent.id));
+});
+
+test('one request retains both project associations without duplicate goal links', async t => {
+  const { runtime, store, alpha, beta, work, task } = await fixture(t);
+  const goals = [work(alpha), work(beta)];
+  const { taskId } = await runtime.chat('Prepare the next action for both accepted projects.');
+  const parent = task(taskId);
+  for (const goal of [...goals, goals[0]]) await runtime.request({ id: 'update-' + goal.id, method: 'item/tool/call', params: {
+    threadId: parent.threadId, turnId: parent.turnId, tool: 'relay_work',
+    arguments: { action: 'update', workId: goal.id, nextAction: 'Inspect the next useful change.' },
+  } });
+  const links = store.state.events.filter(event => event.type === 'work_request');
+  assert.equal(links.length, 2);
+  assert.deepEqual(links.map(event => [event.taskId, event.workId, event.projectId]), goals.map(goal => [parent.id, goal.id, goal.projectId]));
+});
+
+test('goal-associated specialists use the registered workspace with read-only authority and inspectable ancestry', async t => {
+  const { runtime, store, adapter, alpha, work, task, started } = await fixture(t);
+  const goal = work(alpha);
+  const { taskId } = await runtime.chat('Independently review the accepted Alpha goal.');
+  const parent = task(taskId);
+  const delegated = runtime.request({ id: 'associated-specialist', method: 'item/tool/call', params: {
+    threadId: parent.threadId, turnId: parent.turnId, tool: 'relay_delegate',
+    arguments: { title: 'Alpha independent review', instructions: 'Inspect Alpha and report findings.', workId: goal.id },
+  } });
+  await waitFor(() => store.state.tasks.some(item => item.kind === 'worker'));
+  const worker = await started(store.state.tasks.find(item => item.kind === 'worker').id);
+  const observed = { workId: worker.workId, projectId: worker.projectId, parentTaskId: worker.parentTaskId,
+    workspace: worker.workspace, permissionMode: worker.permissionMode };
+  const providerOptions = adapter.starts.find(thread => thread.id === worker.threadId);
+  const links = store.state.events.filter(event => event.type === 'work_request');
+  adapter.finish(worker, 'completed', 'Independent review evidence');
+  await delegated;
+  assert.deepEqual(observed, { workId: goal.id, projectId: alpha.id, parentTaskId: parent.id,
+    workspace: alpha.workspace, permissionMode: 'read-only' });
+  assert.equal(providerOptions.workspace, alpha.workspace); assert.equal(providerOptions.permissionMode, 'read-only');
+  assert.equal(adapter.turns.find(turn => turn.threadId === worker.threadId && turn.id === worker.turnId).text, 'Inspect Alpha and report findings.');
+  assert.equal(worker.provider, 'codex');
+  assert.deepEqual(providerOptions.tools, []);
+  assert.equal(links.length, 1); assert.equal(links[0].workId, goal.id); assert.equal(links[0].taskId, parent.id);
+  assert.equal(runtime.board.get(goal.id).status, 'planned', 'A specialist result does not complete the goal.');
+  const response = adapter.responses.find(reply => reply.requestId === 'associated-specialist').result;
+  assert.equal(response.success, true);
+  assert.deepEqual(JSON.parse(response.contentItems[0].text), {
+    status: 'completed', title: 'Alpha independent review', result: 'Independent review evidence',
+  });
+});
+
+test('specialist goal association rejects invalid or closed goals before reserving work', async t => {
+  const { runtime, store, adapter, alpha, work, task } = await fixture(t);
+  const goals = ['paused', 'cancelled', 'completed'].map(value => {
+    const goal = work(alpha, value);
+    runtime.board.updateWork(goal.id, { status: value, ...(value === 'completed' ? { reviewed: true, completionNote: 'Inspected fixture result.' } : {}) });
+    return goal;
+  });
+  const { taskId } = await runtime.chat('Review an eligible goal.');
+  const parent = task(taskId);
+  // If the boundary regresses, finish an incorrectly accepted worker so the assertion fails without hanging.
+  const startTurn = adapter.startTurn.bind(adapter);
+  adapter.startTurn = async options => {
+    const turn = await startTurn(options);
+    if (options.threadId !== parent.threadId) adapter.finish({ threadId: options.threadId, turnId: turn.id });
+    return turn;
+  };
+  const invoke = workId => runtime.request({ id: 'invalid-specialist', method: 'item/tool/call', params: {
+    threadId: parent.threadId, turnId: parent.turnId, tool: 'relay_delegate',
+    arguments: { title: 'Review', instructions: 'Inspect and report.', workId },
+  } });
+  for (const invalid of [null, '', 42, 'x'.repeat(161)]) await assert.rejects(invoke(invalid), status(400));
+  await assert.rejects(invoke('missing-goal'), status(404));
+  for (const goal of goals) await assert.rejects(invoke(goal.id), status(409));
+  assert.equal(store.state.tasks.filter(item => item.kind === 'worker').length, 0);
+  assert.equal(adapter.starts.length, 1);
+  assert.deepEqual(store.state.events.filter(event => event.type === 'work_request'), []);
+});
+
+test('unassigned specialists remain in the coordinator workspace without a fabricated goal relation', async t => {
+  const { runtime, store, adapter, task, started } = await fixture(t);
+  const { taskId } = await runtime.chat('Independently inspect the local coordinator documentation.');
+  const parent = task(taskId);
+  const delegated = runtime.delegate(parent, { title: 'Local review', instructions: 'Inspect the coordinator documentation.' });
+  await waitFor(() => store.state.tasks.some(item => item.kind === 'worker'));
+  const worker = await started(store.state.tasks.find(item => item.kind === 'worker').id);
+  adapter.finish(worker);
+  await delegated;
+  assert.equal(worker.workspace, parent.workspace); assert.equal(worker.permissionMode, 'read-only');
+  assert.equal(worker.projectId, undefined); assert.equal(worker.workId, undefined); assert.equal(worker.parentTaskId, parent.id);
+  assert.deepEqual(store.state.events.filter(event => event.type === 'work_request'), []);
+});
+
+for (const goalStatus of ['paused', 'cancelled']) test(`${goalStatus} goal cancels a specialist opening its thread without starting or replaying its turn`, async t => {
+  const { runtime, store, adapter, alpha, beta, work, task, started } = await fixture(t);
+  store.change(state => { state.settings.maxWorkers = 1; });
+  const goal = work(alpha), otherGoal = work(beta);
+  const { taskId } = await runtime.chat('Independently inspect the accepted project work.');
+  const parent = task(taskId), originalStart = adapter.startThread.bind(adapter);
+  let release;
+  adapter.startThread = options => new Promise(resolve => { release = async () => resolve(await originalStart(options)); });
+  const delegated = runtime.delegate(parent, { title: 'Delayed Alpha review', instructions: 'Inspect Alpha.', workId: goal.id });
+  await waitFor(() => release);
+  const workerId = store.state.tasks.find(item => item.kind === 'worker').id;
+  await runtime.updateWork(goal.id, { status: goalStatus });
+  const statusAfterStop = task(workerId).status;
+  const reservedAfterStop = store.state.tasks.filter(item => item.kind === 'worker' && ['queued', 'running', 'waiting'].includes(item.status)).length;
+  adapter.startThread = originalStart;
+  await release();
+  const done = await delegated;
+  assert.equal(statusAfterStop, 'cancelled'); assert.equal(reservedAfterStop, 0);
+  assert.equal(done.status, 'cancelled'); assert.equal(done.startedAt, null);
+  assert.equal(adapter.turns.filter(turn => turn.threadId === done.threadId).length, 0);
+  assert.equal(runtime.board.get(goal.id).status, goalStatus);
+  // Releasing capacity allows another project, without implicitly reopening the stopped goal.
+  const other = runtime.delegate(parent, { title: 'Beta review', instructions: 'Inspect Beta.', workId: otherGoal.id });
+  await waitFor(() => store.state.tasks.some(item => item.kind === 'worker' && item.id !== workerId));
+  const next = await started(store.state.tasks.find(item => item.kind === 'worker' && item.id !== workerId).id);
+  adapter.finish(next); await other;
+  if (goalStatus === 'cancelled') await runtime.updateWork(goal.id, { status: 'planned' });
+  else runtime.resumeWork(goal.id);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(task(workerId).status, 'cancelled');
+  assert.equal(store.state.tasks.filter(item => item.workId === goal.id).length, 1);
+  assert.equal(adapter.turns.filter(turn => turn.threadId === done.threadId).length, 0);
+});
+
+for (const interruption of ['cancelRequested', 'pausedGoal']) test(`specialist startup revalidates ${interruption} before beginning a provider turn`, async t => {
+  const { runtime, store, adapter, alpha, work, task } = await fixture(t);
+  const goal = work(alpha);
+  const { taskId } = await runtime.chat('Review the accepted Alpha goal.');
+  const parent = task(taskId), originalStart = adapter.startThread.bind(adapter);
+  let release;
+  adapter.startThread = options => new Promise(resolve => { release = async () => resolve(await originalStart(options)); });
+  const delegated = runtime.delegate(parent, { title: 'Delayed review', instructions: 'Inspect Alpha.', workId: goal.id });
+  await waitFor(() => release);
+  const workerId = store.state.tasks.find(item => item.kind === 'worker').id;
+  // Exercise the startup guard independently of updateWork's cancellation path.
+  store.change(state => {
+    if (interruption === 'cancelRequested') state.tasks.find(item => item.id === workerId).cancelRequested = true;
+    else state.workItems.find(item => item.id === goal.id).status = 'paused';
+  });
+  const startTurn = adapter.startTurn.bind(adapter);
+  adapter.startTurn = async options => {
+    const turn = await startTurn(options);
+    if (options.threadId !== parent.threadId) adapter.finish({ threadId: options.threadId, turnId: turn.id });
+    return turn;
+  };
+  await release();
+  const done = await delegated;
+  assert.equal(adapter.turns.filter(turn => turn.threadId === done.threadId).length, 0);
+  assert.equal(done.status, 'cancelled'); assert.equal(done.startedAt, null);
+});
+
+for (const association of ['goal', 'unassigned']) for (const change of ['missing', 'replaced', 'sensitive']) {
+  test(`${association} specialist rejects a ${change} workspace before opening a provider thread`, async t => {
+    const { runtime, store, adapter, root, alpha, work, task } = await fixture(t);
+    const goal = work(alpha);
+    const { taskId } = await runtime.chat('Inspect the accepted local work.');
+    const parent = task(taskId);
+    const workspace = association === 'goal' ? alpha.workspace : parent.workspace;
+    await rename(workspace, workspace + '-original');
+    if (change !== 'missing') {
+      const replacement = join(root, change === 'sensitive' ? '.ssh' : 'different-directory');
+      await mkdir(replacement);
+      await symlink(replacement, workspace, 'dir');
+    }
+    // A regressed boundary gets an immediate fixture response, never real directory access.
+    const startTurn = adapter.startTurn.bind(adapter);
+    adapter.startTurn = async options => {
+      const turn = await startTurn(options);
+      if (options.threadId !== parent.threadId) adapter.finish({ threadId: options.threadId, turnId: turn.id });
+      return turn;
+    };
+    const done = await runtime.delegate(parent, { title: 'Scoped review', instructions: 'Inspect the registered workspace.',
+      ...(association === 'goal' ? { workId: goal.id } : {}) });
+    assert.equal(done.status, 'failed'); assert.equal(done.startedAt, null);
+    assert.equal(adapter.starts.length, 1, 'Only the original master thread may have opened.');
+    assert.equal(adapter.turns.length, 1, 'No specialist turn may run after workspace identity changes.');
+    assert.equal(store.state.tasks.filter(item => item.kind === 'worker' && ['queued', 'running', 'waiting'].includes(item.status)).length, 0);
+  });
+}
 
 test('two project runs start asynchronously while the master answers independently', async t => {
   const { runtime, store, adapter, alpha, beta, work, task, started } = await fixture(t);
@@ -244,7 +479,7 @@ test('v1 coordinator rotates once while its visible history and handoff survive'
   assert.notEqual(currentId, 'legacy-main'); assert.equal(adapter.resumes.length, 0);
   assert.deepEqual(store.state.messages.filter(message => history.some(old => old.id === message.id)), history);
   assert.ok(store.state.threads.some(thread => thread.id === 'legacy-main'));
-  assert.equal(store.state.threads.find(thread => thread.id === currentId).toolSpecVersion, 4);
+  assert.equal(store.state.threads.find(thread => thread.id === currentId).toolSpecVersion, 5);
   assert.ok(adapter.starts[0].tools.some(tool => tool.name === 'relay_run'));
   assert.match(adapter.turns[0].text, /LEGACY_HISTORY_MARKER/);
   adapter.finish(task(first.taskId));

@@ -26,6 +26,23 @@ async function fixture(t) {
 }
 const draft = projectId => ({ projectId, title: 'Improve a bounded flow', objective: 'Deliver the accepted change and verify its visible behavior.' });
 
+test('review receipts retain their exact note and date after reopening and restart', async t => {
+  const { store, board, project, root, workspace } = await fixture(t);
+  const work = board.createWork(draft(project.id));
+  board.updateWork(work.id, { status: 'completed', reviewed: true, completionNote: 'Inspected the keyboard flow.' });
+  const receipts = structuredClone(store.state.events.filter(event => event.type === 'work_review'));
+  assert.equal(receipts.length, 1);
+  assert.equal(receipts[0].workId, work.id);
+  assert.equal(receipts[0].createdAt, board.get(work.id).completedAt);
+  assert.equal(receipts[0].detail, 'Inspected the keyboard flow.');
+  board.updateWork(work.id, { status: 'active', nextAction: 'Check an additional edge case.' });
+  assert.equal(board.get(work.id).completedAt, null);
+  assert.deepEqual(store.state.events.filter(event => event.type === 'work_review'), receipts);
+  store.close();
+  const restored = new Store(join(root, 'data'), workspace); t.after(() => restored.close());
+  assert.deepEqual(restored.state.events.filter(event => event.type === 'work_review'), receipts);
+});
+
 test('legacy migration is additive and idempotent; everyday questions never become goals', async t => {
   const { root, workspace, secondWorkspace } = await directory(t);
   const data = join(root, 'data'); await mkdir(data);

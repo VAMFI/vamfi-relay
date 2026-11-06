@@ -2,7 +2,7 @@
   "format": 1,
   "product": "Vamfi Relay",
   "version": "0.4.0",
-  "sourceDigest": "e46b9dc585cd5fdcfec019205528374d34889d4d741ba97c724c43e1073d96a2",
+  "sourceDigest": "aae4e981c8fc9b75ee45093cd4c0690fa7d75ed67030f42c7d365cc0901a5d26",
   "files": [
     {
       "path": ".github/workflows/ci.yml",
@@ -21,7 +21,7 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "be1b403cbfe5ffa789154152510fe791980a381fdc0f9bf8cbeb58f0cb072cdc",
+      "sha256": "19ed64a5224691279bb2fdf508513d4bedd2bb215539ae12600746d244aabb2b",
       "mode": 420
     },
     {
@@ -36,7 +36,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "93335e665c067cbb90273b19c2c8a76947ddd77a808df09e129ed443f9044d93",
+      "sha256": "632fb19a8b907360bad68bb40e22e7886c8e48ae0e4607f1faee71c74c6882da",
       "mode": 420
     },
     {
@@ -86,7 +86,7 @@
     },
     {
       "path": "docs/assets/sample-dashboard.jpg",
-      "sha256": "e9cc9c6a99b3f39634987e76cd376e5557b1ece4d75ce35fa4b26779db52cd39",
+      "sha256": "a2f4557958f4fe93204106e331ef49ff896a112dd874c48417e2220e18d4050d",
       "mode": 420
     },
     {
@@ -101,7 +101,12 @@
     },
     {
       "path": "docs/VERIFICATION.md",
-      "sha256": "51089d008c4a47640ad2c8f28ccbd0717315976abf7dbaef30c685975d3d8f66",
+      "sha256": "6d8e1a23cdc04895e420f036913db480c17ef772ae04d9f6ef3ae6d645a753ec",
+      "mode": 420
+    },
+    {
+      "path": "docs/DAILY-WORK-CONTRACT.md",
+      "sha256": "ea46ab169e039921739c4cdba221e654903d761fbb4dc3cdce7ea232b7f1e0fb",
       "mode": 420
     },
     {
@@ -126,7 +131,7 @@
     },
     {
       "path": "scripts/prepare-release.mjs",
-      "sha256": "35721992def29000685ae2ddae86a2705cf624547e291a583fd219015e99617b",
+      "sha256": "45cc184f52e53fd1ab77d4187956edc0bc00609465a4a0f35c19d279e2a25252",
       "mode": 420
     },
     {
@@ -142,6 +147,11 @@
     {
       "path": "scripts/verify-usecase.mjs",
       "sha256": "6fcbf1f2e467672a1592b4283211de15aec14396edc7dfb566890e7221369899",
+      "mode": 420
+    },
+    {
+      "path": "scripts/verify-daily.mjs",
+      "sha256": "5a49bee4a293c6f54692fce446fbee371c39ce40408494853f5e8cd1c2995fe6",
       "mode": 420
     },
     {
@@ -166,7 +176,7 @@
     },
     {
       "path": "server/demo.mjs",
-      "sha256": "f9f4e202457743083a94529adc909e0fe44a1d132d316345e03529ccae02cb04",
+      "sha256": "3f3b807042fd6a795c86372385ad5545b6e6ee1a693f265fe906eac3e1aa9ff5",
       "mode": 420
     },
     {
@@ -181,7 +191,7 @@
     },
     {
       "path": "server/runtime.mjs",
-      "sha256": "c4c65a256ad76d733058b812e07c109101efa79e46b05fbdc4e2bec7b8109392",
+      "sha256": "d6eb73ef494a212939f04e9df676ce0d1f53009e3307d1a707c0e91e40674f05",
       "mode": 420
     },
     {
@@ -206,7 +216,7 @@
     },
     {
       "path": "server/work.mjs",
-      "sha256": "dc206b478ac741bb8602d519a6d27c721610013b8d6958b1ab5edb7aaf1c4e5c",
+      "sha256": "7560841c1b68a2b8fbfae0a4060c48c5b135f7e945469b3794e92bb3ae81a08c",
       "mode": 420
     },
     {
@@ -251,17 +261,17 @@
     },
     {
       "path": "tests/runtime-plan.test.mjs",
-      "sha256": "3de38ed0cd00c3ce0f750c00df3621057a35ab80faf130fe8d999b0619587ebe",
+      "sha256": "b46b32bfc976470ffc2f88a983c830e558ba692e699a125c41c68101f3754cc7",
       "mode": 420
     },
     {
       "path": "tests/runtime-work.test.mjs",
-      "sha256": "73396cfe7146a93391931c452726315a6ab8ad71b10b7278e31e0554b8c40672",
+      "sha256": "82131d62f5b8cc345a23a5b6da602b198fdd56de3d804c1f4eb05ff2f45e3b7a",
       "mode": 420
     },
     {
       "path": "tests/runtime.test.mjs",
-      "sha256": "9f375dbf0e4acb9e497bc3ad32279b0b9c4b005bad3d5321811ed11a52c9d2e1",
+      "sha256": "10c1a9f589c1e23b8d57abe4b75b86e93320f00fd7c6b9f3dddb2c0dc0a9b4ea",
       "mode": 420
     },
     {
@@ -291,7 +301,7 @@
     },
     {
       "path": "tests/work.test.mjs",
-      "sha256": "45cae8ef8a14a13a4904cf9c449ff960d5f19f3ebfda2ee94fd33492fe17fdfa",
+      "sha256": "15e88b86a892b92192455d2719a8a6860be74321926929f5b4bed3afdcd9f632",
       "mode": 420
     },
     {
@@ -315,6 +325,26 @@
       "mode": 420
     },
     {
+      "path": "web/daily-lib.js",
+      "sha256": "27d17d3170713a1592488b5241f8c2d3f5e1ddde74c043fe5aaa390d28808863",
+      "mode": 420
+    },
+    {
+      "path": "web/daily-lib.test.js",
+      "sha256": "f569c29349ca6608c4feb3df4a011ee353e8c28016e5491b39ab3b750fb6fbc9",
+      "mode": 420
+    },
+    {
+      "path": "web/daily.jsx",
+      "sha256": "932b303aaa97a84e9b9df241371420f22cc3de26189008c91c0731c6aac83c75",
+      "mode": 420
+    },
+    {
+      "path": "web/daily.css",
+      "sha256": "12109c0cddd136eb0fc2b0e27df1a8e1c58ce0aac2e9ad48e6f28bde8565078b",
+      "mode": 420
+    },
+    {
       "path": "web/lib.js",
       "sha256": "7cf6d46587eb2fd74b29258286ebe0eb7b3d3f92e2ac8832087a2913b166538b",
       "mode": 420
@@ -326,7 +356,7 @@
     },
     {
       "path": "web/main.jsx",
-      "sha256": "431716c30ef5e8b7e09d2f8b2e9c575daece3dbcf5408cc205ee065d57dff88f",
+      "sha256": "97d3d219423f9dd0e8cc8d0482333b43cd5ca99c5bf6fc19f9abacc85a613b9f",
       "mode": 420
     },
     {

@@ -216,6 +216,8 @@ export class WorkBoard {
     this.store.change(() => {
       Object.assign(work, patch, { updatedAt: timestamp() });
       this.store.event('work', 'Work updated', `${work.title} · ${work.status}`, { projectId: work.projectId, workId });
+      if (patch.status === 'completed') this.store.event('work_review', 'User-reviewed completion', patch.completionNote,
+        { projectId: work.projectId, workId, createdAt: patch.completedAt });
     });
     return this.get(workId);
   }

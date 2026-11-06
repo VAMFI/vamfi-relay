@@ -12,7 +12,7 @@ Connect the Codex installation on your machine. Relay discovers stored chats, gr
 
 ![Vamfi Relay goal dashboard with fictional sample projects](docs/assets/sample-dashboard.jpg)
 
-*The sample goal dashboard. The Codex workspace view separately discovers your real local chats.*
+*The dashboard with fictional sample data: ongoing goals, agent assignments, daily requests and progress. The Codex workspace view separately discovers your real local chats.*
 
 Use Node.js **22.13 or newer** and npm. Live work requires your own authenticated Codex installation; complete sign-in privately in Codex. macOS is the initial real-provider qualification platform. Linux and Windows are not yet qualified for the full workflow.
 
@@ -32,12 +32,14 @@ This is a GitHub source distribution. There is no published npm installer; `priv
 
 ## Your first session
 
+Start on **Dashboard**. Work in motion and Who is working show current goals and assignments across dates; What you asked and What changed follow the selected day. Open master conversation returns to the same chat. Agent reports, observed activity and your completion reviews remain distinct, and original requests link to the goals they actually affected.
+
 1. **Open your Codex workspace.** Relay discovers stored chat metadata through the installed Codex app-server and groups it by recorded working directory, using Codex project names when available. Discovery does not start tasks or grant project write access. If discovery is unavailable, inspect Connections and refresh after resolving the provider issue.
 2. **Find the project.** Browse its chats and load the history you need. The local generated memory summary, when available, is supplementary context; it may be incomplete or stale.
 3. **Continue in Relay.** Review the bounded context handoff, add your next request, and acknowledge that an external agent may still be working. Relay carries that context and its recorded project directory into the master conversation. Project execution uses separately registered Relay sessions. The original Codex chat remains untouched. Sending the reviewed context to Codex for a response uses your model service and account limits.
 4. **Give substantial work a goal.** Register the intended directory, specify an objective and next action, and choose its permissions. New registrations default to read-only. Ordinary conversation does not automatically become work in motion.
 5. **Review and run.** Queue one action or draft a plan of 1–8 ordered steps. Review the exact steps, choose automatic continuation or a pause after each, and approve the plan. The master can draft a plan but cannot approve it for you.
-6. **Review outcomes.** Work in motion shows ongoing goals across projects and dates. Needs you collects blockers, recovery holds, and review requests. Inspect the changes and evidence before adding a completion note and marking a goal done.
+6. **Review outcomes.** Work in motion shows ongoing goals across projects and dates. Needs you collects blockers, recovery holds, and review requests. Inspect the changes and evidence before adding a completion note and marking a goal done. New completion reviews remain in daily history if you later reopen the goal.
 
 Selecting another project preserves the master conversation. Each project has a persistent execution session and one active run at a time. Other accepted work waits in a durable queue. Background capacity is configurable from 1–3, shared by project runs and read-only specialists. Queued and held runs do not consume running capacity; the queue accepts at most 50 unfinished project runs.
 
