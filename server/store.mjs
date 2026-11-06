@@ -3,6 +3,7 @@ import { mkdirSync, chmodSync, realpathSync, openSync, closeSync, writeFileSync,
 import { basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { redact } from './security.mjs';
+import { reconcileWorkerResult } from './worker-results.mjs';
 
 export const timestamp = () => new Date().toISOString();
 export const id = () => randomUUID();
@@ -148,7 +149,9 @@ export class Store {
       }
       task.status = 'interrupted'; task.completedAt = timestamp();
       if (task.kind === 'project') { task.queueState = null; task.queueReason = ''; }
-      task.error = task.workId
+      task.error = task.kind === 'worker'
+        ? 'Relay restarted. This specialist was interrupted and was not automatically rerun. Review its assignment before requesting a new one.'
+        : task.workId
         ? 'Relay restarted. This run was not automatically rerun. Review it and explicitly start a new project run to resume.'
         : 'Relay restarted. This task was not automatically rerun. Reconnect and send a new message to continue.';
       if (task.workId) {
@@ -193,6 +196,7 @@ export class Store {
     for (const approval of this.state.approvals.filter(a => a.status === 'pending')) approval.status = 'expired';
     for (const thread of this.state.threads) thread.status = 'idle';
     for (const message of this.state.messages.filter(m => m.status === 'streaming')) message.status = 'error';
+    for (const task of this.state.tasks) reconcileWorkerResult(this.state, task);
     this.persist();
     } catch (error) {
       try { this.db?.close(); } catch {}

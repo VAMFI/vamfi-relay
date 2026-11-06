@@ -2,6 +2,16 @@
 
 Versions below describe the local prototype. Verification records distinguish shipped source behavior, fixture results, and real-provider checks.
 
+## Unreleased — responsive background work
+
+- Independent background specialist assignments return immediately, leaving the master available for another request. The original synchronous specialist tool remains supported.
+- Actual terminal outcomes appear once in the master conversation and remain available to later requests; restart reconciles interrupted outcomes without replay.
+- Stop requests freeze all affected work before asynchronous interruption and attempt every stop even if one fails. Unconfirmed stops retain active capacity.
+- Daily exports retain work started on earlier days when it finishes or produces activity on the selected day, including its original request.
+- Source-cited Claude research remains proposed and unqualified; Hermes is the next provider selected for qualification.
+
+Local automated qualification: 228 tests on Node 22 and 24. A four-turn real Codex pilot verified natural-language background routing, a responsive master during a delayed specialist, actual result delivery without another model turn, later context use, and restart without duplicate work or messages. Final release evidence is recorded in [verification](docs/VERIFICATION.md).
+
 ## Unreleased — daily work dashboard
 
 ### Added

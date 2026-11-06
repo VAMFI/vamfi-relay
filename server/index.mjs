@@ -61,10 +61,18 @@ export async function createApp(options={}) {
       }
       if(req.method==='GET' && url.pathname==='/api/export') {
         const date=url.searchParams.get('date');
-        if(!/^\d{4}-\d{2}-\d{2}$/.test(date || ''))throw problem(400,'Choose a date in YYYY-MM-DD format.');
-        const day=iso=>new Intl.DateTimeFormat('en-CA',{timeZone:store.state.meta.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(iso));
-        const tasks=store.state.tasks.filter(t=>day(t.createdAt)===date),ids=new Set(tasks.map(t=>t.id));
-        const report={product:'Vamfi Relay',date,timezone:store.state.meta.timezone,exportedAt:timestamp(),projects:store.state.projects,workItems:store.state.workItems,tasks,messages:store.state.messages.filter(m=>ids.has(m.taskId)),events:store.state.events.filter(e=>day(e.createdAt)===date)};
+        const parsed=new Date(`${date}T00:00:00Z`);
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0,10)!==date)throw problem(400,'Choose a valid date in YYYY-MM-DD format.');
+        const formatter=new Intl.DateTimeFormat('en-CA',{timeZone:store.state.meta.timezone,year:'numeric',month:'2-digit',day:'2-digit'});
+        const onDay=iso=>typeof iso==='string' && Number.isFinite(Date.parse(iso)) && formatter.format(new Date(iso))===date;
+        const events=store.state.events.filter(e=>onDay(e.createdAt));
+        const ids=new Set([...events,...store.state.messages.filter(m=>onDay(m.createdAt))].map(record=>record.taskId).filter(Boolean));
+        for(const task of store.state.tasks)if([task.createdAt,task.startedAt,task.completedAt].some(onDay))ids.add(task.id);
+        // Include the original request for cross-day outcomes without following cycles.
+        const byId=new Map(store.state.tasks.map(task=>[task.id,task]));
+        for(const taskId of ids){const parent=byId.get(taskId)?.parentTaskId;if(parent && byId.has(parent))ids.add(parent);}
+        const tasks=store.state.tasks.filter(task=>ids.has(task.id));
+        const report={product:'Vamfi Relay',date,timezone:store.state.meta.timezone,exportedAt:timestamp(),projects:store.state.projects,workItems:store.state.workItems,tasks,messages:store.state.messages.filter(m=>ids.has(m.taskId)),events};
         res.setHeader('Content-Disposition',`attachment; filename="relay-${date}.json"`);return json(200,report);
       }
       if(req.method==='POST') {

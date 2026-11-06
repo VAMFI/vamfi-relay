@@ -47,6 +47,30 @@ test('sample data never mutates live data and export validates its date',async t
   assert.equal(app.store.state.tasks.length,0);assert.equal((await fetch(base+'/api/export?date=bad')).status,400);
   const out=await (await fetch(base+'/api/export?date=2026-11-05')).json();assert.equal(out.tasks.length,0);
 });
+test('daily export retains cross-day outcomes, observed activity and original requests in the workspace timezone',async t=>{
+  const {base,app}=await fixture(t);
+  app.store.change(state=>{
+    state.meta.timezone='America/Toronto';
+    const old='2026-11-04T20:00:00Z';
+    state.tasks.push(
+      {id:'original',kind:'request',status:'completed',createdAt:old,completedAt:old},
+      {id:'cross-day',kind:'worker',parentTaskId:'original',status:'completed',createdAt:old,startedAt:old,completedAt:'2026-11-06T04:30:00Z',result:'Actual worker result'},
+      {id:'observed',kind:'project',status:'running',createdAt:old,startedAt:old},
+      {id:'unrelated',kind:'request',status:'completed',createdAt:old,completedAt:old},
+    );
+    state.messages.push({id:'request',taskId:'original',role:'user',text:'Original request',createdAt:old},
+      {id:'receipt',taskId:'cross-day',channel:'master',source:'worker',role:'assistant',text:'Actual worker result',createdAt:'2026-11-06T04:30:00Z'});
+    state.events.push({id:'command',taskId:'observed',type:'commandExecution',createdAt:'2026-11-05T21:00:00Z'});
+  });
+  const report=await(await fetch(base+'/api/export?date=2026-11-05')).json();
+  assert.deepEqual(report.tasks.map(task=>task.id),['original','cross-day','observed']);
+  assert.deepEqual(report.messages.map(message=>message.id),['request','receipt']);
+  assert.deepEqual(report.events.map(event=>event.id),['command']);
+  const nextDay=await(await fetch(base+'/api/export?date=2026-11-06')).json();
+  assert.deepEqual(nextDay.tasks,[]);
+  assert.equal((await fetch(base+'/api/export?date=2026-02-30')).status,400);
+});
+
 test('skills require exact reviewed hash, start disabled, and activate only explicitly',async t=>{
   const {post,app}=await fixture(t);
   const content='---\nname: concise-review\ndescription: Review a bounded change.\n---\nSummarize verified findings.';

@@ -43,6 +43,8 @@ Start on **Dashboard**. Work in motion and Who is working show current goals and
 
 Selecting another project preserves the master conversation. Each project has a persistent execution session and one active run at a time. Other accepted work waits in a durable queue. Background capacity is configurable from 1–3, shared by project runs and read-only specialists. Queued and held runs do not consume running capacity; the queue accepts at most 50 unfinished project runs.
 
+Independent read-only specialists can work in the background while you continue the master conversation. An accepted assignment returns immediately; its actual result arrives as a **Specialist update** with a link to inspect the assignment. A specialist survives the originating response ending or failing. Explicit Stop and goal pause/cancel still apply. Each specialist has a three-minute limit; an unconfirmed stop remains visible and retains its capacity until the provider confirms termination. Restart records interrupted work without replaying it.
+
 A successful provider turn is an execution record, not proof that its goal is complete. A plan advances only after both a successful turn and a `ready` agent-reported checkpoint. Missing or blocked checkpoints stop advancement. Final acceptance remains a separate user action.
 
 ## Discovery, memory, and privacy
