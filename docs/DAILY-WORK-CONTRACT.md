@@ -84,6 +84,9 @@ No new dependencies, provider protocol or arbitrary skill execution.
 4. Desktop and 390px browser checks exercise date/search, request/task/goal
    links, master navigation, empty states, expansion and literal untrusted text;
    no overflow or console errors. Sample actions remain inert.
+   Daily export includes task creation, startup, terminal outcomes or observed
+   activity on the selected local day, plus original request ancestry. A job
+   begun on an earlier day must not disappear from its completion day's export.
 5. Full tests/build and independent review pass. Release export includes all new
    source files and no local data. Existing live state is preserved on upgrade.
 

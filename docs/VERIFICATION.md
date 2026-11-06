@@ -1,5 +1,21 @@
 # Verification log
 
+## Responsive background specialists — 2026-11-06 (unreleased)
+
+The independent review found no remaining blocking issue after fixes. **228/228 tests passed on Node 22.23.2 and Node 24.22.1**, with zero skipped/cancelled tests. The reviewer independently ran 116 affected runtime, work and HTTP tests. Isolated in-memory mutations detected incorrect parent-lifetime rules, admission payload conflicts and duplicate recovery receipts; shared source was not mutated.
+
+The new `node scripts/verify-background.mjs --live` passed in **four real Codex turns** on macOS, from 07:46:03 to 07:47:08 UTC. A natural-language request, without naming the tool, routed to an asynchronous read-only specialist. The master completed its acknowledgment and a second response while the specialist waited and read an unpredictable project file. One exact result appeared in the master without an additional model turn; a later response used it from recorded context. Restart retained the master with no repeated assignment or message. The witness file and directory contents stayed unchanged. All **30 initial/final source hashes** matched, and a post-run comparison matched the current source.
+
+The existing synchronous two-project pilot also passed on this source in five real Codex turns, including restart and casual-question checks; initial/final source hashes matched.
+
+Browser checks used a synthetic provider in real Chromium: one Specialist update, exact assignment/goal/original-request drill-down, literal HTML with no injected image, and no console warnings/errors. At measured 390 CSS pixels the page width/scroll width were 390/390 and dialog width/scroll width were 364/364. Keyboard Enter, Tab and Escape worked. Browser zoom was accounted for when setting the emulated viewport. This is targeted browser evidence, not a full accessibility certification.
+
+Review fixed three material stop races: sibling startup while a first stop awaited; failed interruption after a late turn ID falsely marking work terminal; and a first failed child stop preventing other interruptions. Regression probes establish that every requested stop is attempted and uncertainty retains its slot. A process/turn stop does not imply filesystem rollback. Result delivery promises one durable local receipt, not exactly-once model processing.
+
+The clean 81-file source export passed `npm ci --ignore-scripts`, all 228 tests and the production build; dependency audit reported zero vulnerabilities. The existing installation was backed up and upgraded while idle. All 17 task IDs, 41 message IDs, three goals, two projects, saved permissions and master identity were preserved; Codex reconnected without starting work, and the daily dashboard was inspected in Chromium.
+
+Raw provider reports and screenshots remain private. Public CI is recorded by the resulting pull request and post-merge run; it was still pending when this source snapshot was prepared. The broader product goal and second-provider qualification remain open.
+
 ## Daily work slice — 2026-11-06 (unreleased)
 
 The dashboard now separates current goals/assignments from the selected day's linked requests, reports, observed activity, external notes and immutable completion reviews. This qualifies the daily-work slice, not the full multi-provider product goal.
@@ -13,7 +29,7 @@ The dashboard now separates current goals/assignments from the selected day's li
 
 The first real daily pilot stopped at a harness comparison between a macOS temporary path alias and its canonical path. Its failure record was retained; canonicalizing the temporary root fixed the harness, and the later full run passed. Raw reports, local IDs and private screenshots stay in ignored `artifacts/local`; they are not published. The README screenshot contains only fictional sample data.
 
-Limits: older records may lack request links or immutable review receipts. Observed commands are not automatically classified as passing tests. External Codex chats still have unknown live status. Specialists return results through a synchronous tool response; guaranteed standalone result delivery after master failure and a second real adapter remain broader product work. This new slice has no tagged release yet; v0.4.0 remains the previous immutable release.
+Limits recorded at the daily-work checkpoint: older records may lack request links or immutable review receipts. Observed commands are not automatically classified as passing tests. External Codex chats still have unknown live status. At that checkpoint specialists returned through a synchronous tool response. The responsive-specialist slice above adds durable standalone delivery; a second real adapter remains broader product work. This new slice has no tagged release yet; v0.4.0 remains the previous immutable release.
 
 ## v0.4 Codex workspace prototype — 2026-11-06
 

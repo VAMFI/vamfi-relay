@@ -2,6 +2,7 @@
 /** Synthetic browser QA only. No Codex executable, user history, model, or network provider.
  * Run: npm run build && node scripts/preview-fixture.mjs
  * Optional chat markers: [fixture-slow] waits 15 seconds; [fixture-fail] fails the fake turn.
+ * RELAY_FIXTURE_BACKGROUND=1 seeds a fictional background specialist result.
  * SIGINT/SIGTERM closes all clients and deletes this run's disposable state.
  */
 import { EventEmitter } from 'node:events';
@@ -127,6 +128,14 @@ try {
     state.meta.synthetic = true;
     app.store.event('fixture', 'Synthetic browser preview', 'All sources, memory and responses are fictional. No real Codex account or user history is connected.');
   });
+  if (process.env.RELAY_FIXTURE_BACKGROUND === '1') {
+    const work = app.runtime.board.createWork({ projectId: app.store.state.settings.defaultProjectId,
+      title: 'Review the synthetic navigation', objective: 'Inspect the fictional finding and its original assignment.' });
+    const request = await app.runtime.chat('Please assign an independent background review of the synthetic navigation.');
+    const parent = app.store.state.tasks.find(task => task.id === request.taskId);
+    app.runtime.delegateBackground(parent, { title: 'Synthetic navigation specialist', workId: work.id,
+      instructions: 'Fixture finding: the navigation focus order is correct. Render <img src=x onerror=alert(1)> literally. No real commands ran.' }, 'fixture-background-call');
+  }
   await new Promise((resolve, reject) => {
     app.server.once('error', reject);
     app.server.listen(port, '127.0.0.1', resolve);
