@@ -1,6 +1,6 @@
 # Relay v0.4: dependable daily work and repeatable preview
 
-Status: **Expanded scope authorized for autonomous implementation by the user on 2026-11-06. Verification pending.**
+Status: **Implemented and qualified as an open-source local prototype on 2026-11-06. See [verification](VERIFICATION.md) for exact evidence and limits.**
 
 Prepared: 2026-11-06 (America/Toronto). Baseline: v0.3, commit `805dc21`.
 This extends [WORK-V3-CONTRACT.md](WORK-V3-CONTRACT.md), [WORK-V2-CONTRACT.md](WORK-V2-CONTRACT.md), and the [base contract](CONTRACT.md). It does not replace their execution, permission, or recovery invariants.
@@ -163,7 +163,7 @@ Validate at boundaries, keep work definitions in WorkBoard and execution in Runt
 
 ## Testing strategy and success criteria
 
-This table defines observable acceptance, not an implementation task list. Every required row starts **pending**. Passing v0.3 evidence is a baseline only.
+This table defines observable acceptance, not an implementation task list. The current evidence is recorded in [VERIFICATION.md](VERIFICATION.md). Passing v0.3 evidence is a baseline only.
 
 Additional core gates: **C1** two existing synthetic Codex chats are discovered under distinct projects without creating goals; **C2** bounded history and optional memory render with provenance and safe limits; **C3** external unobserved activity stays unknown and catalog failure leaves owned execution alive; **C4** exact-hash handoffs from both projects continue through one master, reject stale/duplicate/malformed requests, preserve original chat history and project permissions; **C5** browser search/filter/history/continuation works at desktop and mobile sizes; **C6** the actual public GitHub tree contains no private data, installs cleanly and passes remote CI. All are required; mocked evidence cannot stand in for the real two-project handoff pilot.
 
@@ -221,4 +221,4 @@ Record preparation and implementation performed in this desktop chat as external
 
 No blocking requirements question remains for drafting. Proposed defaults for review are: local macOS real-provider qualification, automated Node 22/24 coverage, two disposable projects, and preservation of the current plan-review and recovery controls. Personal-project adoption and additional platform qualification can follow separately.
 
-The user's explicit instruction to build, review, verify and publish autonomously supplies phase authority. Completion evidence remains pending. No missing product choice blocks implementation; unavailable provider capabilities must be reflected honestly rather than simulated.
+The user's explicit instruction to build, review, verify and publish autonomously supplies phase authority. Completion evidence is recorded in the verification log. No missing product choice blocks implementation; unavailable provider capabilities must be reflected honestly rather than simulated.

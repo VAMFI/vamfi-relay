@@ -2,7 +2,7 @@
 
 ## v0.4 Codex workspace prototype — 2026-11-06
 
-Status: **local and clean-export qualification passed; source push and remote CI pending**. The documentation editor inspected the real-provider report and browser record described below. Automated and rendered-check results were supplied by the integration lead; the documentation editor did not independently repeat model inference or browser interaction. Historical sections below remain historical.
+Status: **local, clean-export, and public GitHub qualification passed**. The documentation editor inspected the real-provider report and browser record described below. Automated and rendered-check results were supplied by the integration lead; the documentation editor did not independently repeat model inference or browser interaction. Historical sections below remain historical.
 
 | Check | Current recorded result | Interpretation |
 | --- | --- | --- |
@@ -15,7 +15,7 @@ Status: **local and clean-export qualification passed; source push and remote CI
 | Current real-provider flow | Ten phases passed; 16 real provider turns (15 completed, one intentionally interrupted), 14 commands all exit 0 | Two disposable projects, reviewed source-context continuation, original source preservation, and one responsive master |
 | Current rendered application | Desktop/mobile Chromium checks passed; zero console errors or warnings | Synthetic provider events in a real browser; separate from live model execution |
 | Clean public snapshot | Fresh `npm ci`, 174 tests on both Node versions, production build, and start/status/HTTP/stop smoke passed | Exported bytes and manifest must match the reviewed source; existing local Git history is excluded |
-| GitHub source and CI | Pending publication and remote result | Local tests are not remote CI; a prepared snapshot is not a public repository |
+| GitHub source and CI | [Public source](https://github.com/VAMFI/vamfi-relay) and [Node 22/24 CI](https://github.com/VAMFI/vamfi-relay/actions/runs/42176481339) passed for source commit `5eb7e2aa1bac4a84cc85de078af254da7cbc30bc` | Both Ubuntu jobs installed, ran all 174 tests, and built successfully; this is not live-provider qualification on Linux |
 
 ### Actual provider pilot and source binding
 
@@ -35,7 +35,7 @@ At **390 CSS pixels** wide, the page's scroll width was 390 and the dialog's wid
 
 The preliminary clean export exposed a packaging defect: the exporter wrote every file with mode `0644`, removing the mock provider executable's `0755` permission. The clean-tree suite consequently had **24 adapter failures** with `EACCES`/provider configuration errors. The corrected exporter preserves executable mode (`0755` for executable source, otherwise `0644`) and records it in the manifest. Two focused release regressions passed, covering permissions, exclusions, manifest/overwrite behavior, and source-change guard failures. The corrected clean exported tree then passed all 174 tests on both Node versions, its production build, and a separate CLI/HTTP service smoke. The preliminary 172-test suite predated these two additional tests. This failure was in packaging, not a change to the previously exercised application code.
 
-The source export uses an explicit file allowlist and records per-file SHA-256 values plus an aggregate digest. It excludes personal agent configuration, local task tracking, application data, installed dependencies, build output, private evidence, and Git history. Public history must start from that reviewed snapshot using a public commit identity. The exporter performs bounded path/identifier checks; it is not a comprehensive secret scanner. A separate review of all exported files remains required.
+The source export uses an explicit file allowlist and records per-file SHA-256 values plus an aggregate digest. It excludes personal agent configuration, local task tracking, application data, installed dependencies, build output, private evidence, and Git history. Public history started from that reviewed snapshot using a GitHub noreply commit identity. Private vulnerability reporting is enabled. The exporter performs bounded path/identifier checks; it is not a comprehensive secret scanner. A separate review of all exported files remains required.
 
 Runtime limits remain explicit: external Codex liveness is unknown; a handoff copies bounded context into Relay-owned work and does not resume the source chat; generated memory may be stale; read-only is not filesystem read isolation; a successful turn or checkpoint is not user acceptance. Other agent providers and full Linux/Windows qualification are outside current evidence.
 

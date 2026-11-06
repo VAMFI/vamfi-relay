@@ -4,7 +4,7 @@ Vamfi Relay is a local, single-user Codex workspace. The current deliverable is 
 
 ## Verification status
 
-**v0.4 local qualification passed.** The integration lead reports 174/174 tests passing from the clean exported tree on Node 22.23.2 and Node 24.22.1, a production build, and zero reported vulnerabilities from the complete dependency audit. The real-provider pilot passed ten phases across two projects and one master conversation; desktop/mobile browser checks passed with synthetic provider events. Clean exported-tree installation, both Node suites, the build and service lifecycle passed. Source push and remote CI remain pending.
+**v0.4 local qualification passed.** The integration lead reports 174/174 tests passing from the clean exported tree on Node 22.23.2 and Node 24.22.1, a production build, and zero reported vulnerabilities from the complete dependency audit. The real-provider pilot passed ten phases across two projects and one master conversation; desktop/mobile browser checks passed with synthetic provider events. Clean exported-tree installation, both Node suites, the build and service lifecycle passed. The public source passed [GitHub CI](https://github.com/VAMFI/vamfi-relay/actions/runs/42176481339) on both Node versions.
 
 | v0.4 gate | Current evidence or remaining work |
 | --- | --- |
@@ -15,9 +15,9 @@ Vamfi Relay is a local, single-user Codex workspace. The current deliverable is 
 | Browser use | Real Chromium with synthetic provider events: catalog, reviewed handoff, keyboard dialogs, sample isolation, mobile width 390 without overflow, and zero console errors |
 | Recovery and existing records | Existing records/permissions preserved; real pilot verified two restarts without replay and explicit retry without rerunning completed steps |
 | Reproducible source distribution | Explicit source export excludes private history/configuration/data; clean install, 174 tests on both Node versions, production build and service lifecycle passed |
-| Public GitHub delivery | Public tree review, private vulnerability reporting, fresh public history, and remote CI pending |
+| Public GitHub delivery | Reviewed public tree, private vulnerability reporting enabled, fresh public history, and both remote CI jobs passed |
 
-The [verification log](VERIFICATION.md) records exact versions, commands, evidence sources, and limits. Do not replace pending rows with assumptions or treat the private local catalog as a public release artifact.
+The [verification log](VERIFICATION.md) records exact versions, commands, evidence sources, and limits. The private local catalog is not a public release artifact.
 
 ## Current scope
 

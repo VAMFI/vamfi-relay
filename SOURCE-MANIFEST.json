@@ -2,7 +2,7 @@
   "format": 1,
   "product": "Vamfi Relay",
   "version": "0.4.0",
-  "sourceDigest": "620563fd76addd1d6b3ea9dcb5bb9ee86c26303361f5e6f709fe77a132bd86bd",
+  "sourceDigest": "e46b9dc585cd5fdcfec019205528374d34889d4d741ba97c724c43e1073d96a2",
   "files": [
     {
       "path": ".github/workflows/ci.yml",
@@ -16,12 +16,12 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "77941d3dc0323c632ba7352be19ab818ff3aa87fde9a7e5c49334a756874fcc5",
+      "sha256": "2387d96c27a90319d4b98b366ccde900bb7d3a1fe55dcc959285f58e4377c4ee",
       "mode": 420
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "158c3f868d796cba9f58f284a55388212c323bd0a486bdb602b825f774659efa",
+      "sha256": "be1b403cbfe5ffa789154152510fe791980a381fdc0f9bf8cbeb58f0cb072cdc",
       "mode": 420
     },
     {
@@ -36,7 +36,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "d75d0d16f2b95b1e2db0b3c48fcc3a7ce95c55d4a963f4f81d8d80d14719423a",
+      "sha256": "93335e665c067cbb90273b19c2c8a76947ddd77a808df09e129ed443f9044d93",
       "mode": 420
     },
     {
@@ -71,7 +71,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "2cc2fcc11e84cbadfc2666212399b9f5b44e000ec9be8f27a75f359e303f0c3a",
+      "sha256": "6e523c471dcfd61ac77bc7e237fa98afe81109e1f58ac602acc0d8dc40cd7897",
       "mode": 420
     },
     {
@@ -96,12 +96,12 @@
     },
     {
       "path": "docs/ROADMAP.md",
-      "sha256": "bd4112ecbca62e1229f25d9b93fd3b03b288788b16e7b96851c32e657951503a",
+      "sha256": "a1887e79e77e048e09815865bb095917a85900468706c461d635ad6bb1e54542",
       "mode": 420
     },
     {
       "path": "docs/VERIFICATION.md",
-      "sha256": "3859d0b797a1f6580981bed5516cc22281cd2c80aa4c44671fb809355d68d4e5",
+      "sha256": "51089d008c4a47640ad2c8f28ccbd0717315976abf7dbaef30c685975d3d8f66",
       "mode": 420
     },
     {
@@ -116,7 +116,7 @@
     },
     {
       "path": "docs/WORK-V4-CONTRACT.md",
-      "sha256": "5ba5c9acdd0d7628a21b07d93e79470d61f6f6bdb964366ec1e290588ab17e8d",
+      "sha256": "82a6c0a899e515e6455f032fada18518497f4742d7532ec41b6674dbdd7468ff",
       "mode": 420
     },
     {

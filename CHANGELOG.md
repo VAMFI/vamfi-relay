@@ -2,7 +2,7 @@
 
 Versions below describe the local prototype. Verification records distinguish shipped source behavior, fixture results, and real-provider checks.
 
-## 0.4.0 — 2026-11-06 (local preview verified; publication pending)
+## 0.4.0 — 2026-11-06 (open-source preview)
 
 ### Added
 
@@ -19,7 +19,7 @@ Versions below describe the local prototype. Verification records distinguish sh
 - Continuing in Relay preserves the original Codex chat and does not silently resume or edit it.
 - macOS is the initial real-provider qualification platform. Other coding agents, public hosting, npm distribution, and cloud/community sharing are outside this prototype.
 
-Local qualification passed the [v0.4 acceptance contract](docs/WORK-V4-CONTRACT.md) use case: ten phases, two projects, one master conversation, reviewed handoff, and restart/retry controls. Automated and desktop/mobile browser checks also passed. Public-source and remote CI gates remain pending; see [verification](docs/VERIFICATION.md) for exact evidence and limits.
+Local qualification passed the [v0.4 acceptance contract](docs/WORK-V4-CONTRACT.md) use case: ten phases, two projects, one master conversation, reviewed handoff, and restart/retry controls. Automated and desktop/mobile browser checks also passed. The clean public snapshot passed installation and both [GitHub CI jobs](https://github.com/VAMFI/vamfi-relay/actions/runs/42176481339); see [verification](docs/VERIFICATION.md) for exact evidence and limits.
 
 ## 0.3.0 — 2026-11-05
 

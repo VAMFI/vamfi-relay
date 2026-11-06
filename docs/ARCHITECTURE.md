@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the v0.4 implementation: a read-only catalog of existing Codex chats, one Relay-owned master conversation, and durable project work. [WORK-V4-CONTRACT.md](WORK-V4-CONTRACT.md) and [CAPABILITIES.md](CAPABILITIES.md) extend the earlier goal, queue, plan, and recovery contracts. Local qualification passed; public-source and remote CI gates remain pending. [Verification](VERIFICATION.md) distinguishes automated tests, actual provider execution, browser fixtures, and historical evidence.
+This document describes the v0.4 implementation: a read-only catalog of existing Codex chats, one Relay-owned master conversation, and durable project work. [WORK-V4-CONTRACT.md](WORK-V4-CONTRACT.md) and [CAPABILITIES.md](CAPABILITIES.md) extend the earlier goal, queue, plan, and recovery contracts. Local qualification, clean-source installation, and GitHub CI passed. [Verification](VERIFICATION.md) distinguishes automated tests, actual provider execution, browser fixtures, and historical evidence.
 
 ## Components
 
